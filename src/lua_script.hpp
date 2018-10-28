@@ -1,0 +1,58 @@
+// GGPAD Copyright 2018 Maciej Latocha
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#pragma once
+
+#include <memory>
+#include <string>
+#include <vector>
+
+struct lua_State;
+
+class LuaScript {
+private:
+    std::unique_ptr<struct lua_State, void(*)(struct lua_State*)> m_vm;
+
+public:
+    class Function {
+    private:
+        friend LuaScript;
+        struct lua_State* m_vm;
+        int m_argc;
+
+        Function( struct lua_State* a_vm, const char* a_funcName );
+        Function( const Function& ) = delete;
+        Function& operator = ( const Function& ) = delete;
+
+    public:
+        Function( Function&& );
+        Function& operator = ( Function&& );
+        ~Function();
+#define ARGUMENT( A_TYPE ) Function& operator << ( A_TYPE );
+        ARGUMENT( int )
+#undef ARGUMENT
+    };
+
+    typedef struct {
+        const char* name;
+        int value;
+    } Record;
+
+    LuaScript();
+    void doFile( const std::string& a_fileName );
+    void bindTable( const std::string& a_name, const std::vector<Record>& a_records );
+
+    Function call( const std::string& a_funcName );
+};
