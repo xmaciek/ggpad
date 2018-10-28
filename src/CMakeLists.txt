@@ -3,16 +3,24 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 
 find_package( Threads REQUIRED )
 find_package( Lua REQUIRED )
+find_package( PkgConfig REQUIRED )
+
+pkg_check_modules( LIBUDEV libudev )
+if( !LIBUDEV_FOUND )
+    message( FATAL_ERROR "unable to locate libudev" )
+endif()
 
 set( SOURCES
     ggpad.cpp
     lua_script.cpp
     lua_script_function.cpp
     main.cpp
+    watcher_udev.cpp
 )
 
 set( LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
+    ${LIBUDEV_LIBRARIES}
     ${LUA_LIBRARIES}
 )
 

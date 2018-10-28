@@ -15,17 +15,28 @@
 
 #pragma once
 
-#include "macros.hpp"
+#include <utility>
+#include <vector>
+
+#include <libudev.h>
+
 #include "watcher.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
+class WatcherUDev : public Watcher {
+    DISABLE_COPY( WatcherUDev )
 
 private:
-    std::unique_ptr<Watcher> m_deviceWatcher;
+    struct udev* m_udevPtr;
+    struct udev_monitor* m_udevMonitorPtr;
+    struct udev_enumerate* m_udevEnumeratePtr;
 
+    // I'm to lazy to setup threaded udev socket notifier
+    // when new devices are connected, for now at least.
+    std::hash<const char*> m_hash;
+    std::vector<std::size_t> m_knownDevices;
 public:
-    GGPAD();
+    WatcherUDev();
+    virtual ~WatcherUDev();
 
-    int exec();
+    virtual std::list<Gamepad*> newDevices() override;
 };

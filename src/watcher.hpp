@@ -15,17 +15,17 @@
 
 #pragma once
 
+#include <list>
+
+#include "gamepad.hpp"
 #include "macros.hpp"
-#include "watcher.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
-
-private:
-    std::unique_ptr<Watcher> m_deviceWatcher;
+class Watcher {
+    DISABLE_COPY( Watcher )
 
 public:
-    GGPAD();
+    Watcher() = default;
+    virtual ~Watcher() = default;
 
-    int exec();
+    virtual std::list<Gamepad*> newDevices() = 0;
 };

@@ -14,8 +14,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ggpad.hpp"
-
 #include "gamepad.hpp"
+#include "watcher_udev.hpp"
 
 
 static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
@@ -27,10 +27,12 @@ static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
 
 GGPAD::GGPAD()
 {
+    m_deviceWatcher = std::make_unique<WatcherUDev>();
 }
 
 int GGPAD::exec()
 {
+    m_deviceWatcher->newDevices();
     LuaScript script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.doFile( "test1.lua" );
