@@ -19,22 +19,25 @@
 #include <string>
 #include <vector>
 
+#include "macros.hpp"
+
 struct lua_State;
 
 class LuaScript {
+    DISABLE_COPY( LuaScript )
+
 private:
     std::unique_ptr<struct lua_State, void(*)(struct lua_State*)> m_vm;
 
 public:
     class Function {
+        DISABLE_COPY( Function )
+
     private:
         friend LuaScript;
         struct lua_State* m_vm;
         int m_argc;
-
         Function( struct lua_State* a_vm, const char* a_funcName );
-        Function( const Function& ) = delete;
-        Function& operator = ( const Function& ) = delete;
 
     public:
         Function( Function&& );
@@ -42,6 +45,7 @@ public:
         ~Function();
 #define ARGUMENT( A_TYPE ) Function& operator << ( A_TYPE );
         ARGUMENT( int )
+        ARGUMENT( double )
 #undef ARGUMENT
     };
 

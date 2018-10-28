@@ -13,11 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ggpad.hpp"
+#pragma once
 
-int main( int argc, char** argv )
-{
-    GGPAD ggpad;
-    return ggpad.exec();
-}
+#include "macros.hpp"
 
+class GGPAD {
+    DISABLE_COPY( GGPAD );
+
+public:
+    GGPAD();
+
+    int exec();
+};

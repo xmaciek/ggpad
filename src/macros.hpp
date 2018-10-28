@@ -13,11 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ggpad.hpp"
-
-int main( int argc, char** argv )
-{
-    GGPAD ggpad;
-    return ggpad.exec();
-}
-
+#define DISABLE_COPY( CLASS_NAME ) \
+    CLASS_NAME( const CLASS_NAME& ) = delete; \
+    CLASS_NAME& operator = ( const CLASS_NAME& ) = delete;

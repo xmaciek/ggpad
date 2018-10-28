@@ -13,11 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ggpad.hpp"
-
-int main( int argc, char** argv )
-{
-    GGPAD ggpad;
-    return ggpad.exec();
-}
-
+MAKE_ENUM( UP )
+MAKE_ENUM( DOWN )
+MAKE_ENUM( LEFT )
+MAKE_ENUM( RIGHT )
+MAKE_ENUM( X )
+MAKE_ENUM( Y )
+MAKE_ENUM( A )
+MAKE_ENUM( B )
+MAKE_ENUM( L1 )
+MAKE_ENUM( L2 )
+MAKE_ENUM( L3 )
+MAKE_ENUM( LX )
+MAKE_ENUM( LY )
+MAKE_ENUM( R1 )
+MAKE_ENUM( R2 )
+MAKE_ENUM( R3 )
+MAKE_ENUM( RX )
+MAKE_ENUM( RY )
+MAKE_ENUM( START )
+MAKE_ENUM( SELECT )

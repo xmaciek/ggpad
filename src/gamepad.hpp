@@ -13,11 +13,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ggpad.hpp"
+#pragma once
 
-int main( int argc, char** argv )
-{
-    GGPAD ggpad;
-    return ggpad.exec();
-}
+#include <cstdint>
+#include "macros.hpp"
+#include "lua_script.hpp"
 
+class Gamepad {
+    DISABLE_COPY( Gamepad )
+
+public:
+    enum Button : int {
+        unknown
+#define MAKE_ENUM( E ) , E
+#include "button_enum.def"
+#undef MAKE_ENUM
+    };
+
+    typedef std::int8_t value_type;
+
+    typedef struct {
+        Button button;
+        value_type value;
+    } Event;
+
+    Gamepad() = default;
+    virtual ~Gamepad() = default;
+
+    virtual bool pollChanges( Event* ) = 0;
+};

@@ -15,9 +15,25 @@
 
 #include "ggpad.hpp"
 
-int main( int argc, char** argv )
+#include "gamepad.hpp"
+
+
+static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
+    { "unknown", 0 }
+#define MAKE_ENUM( NAME ) , { #NAME , Gamepad::NAME }
+#include "button_enum.def"
+#undef MAKE_ENUM
+};
+
+GGPAD::GGPAD()
 {
-    GGPAD ggpad;
-    return ggpad.exec();
 }
 
+int GGPAD::exec()
+{
+    LuaScript script;
+    script.bindTable( "Gamepad", GAMEPAD_TABLE );
+    script.doFile( "test1.lua" );
+    script.call( "GGPAD_buttonChanged" ) << Gamepad::X << 1;
+    return 0;
+}

@@ -58,3 +58,11 @@ LuaScript::Function& LuaScript::Function::operator << ( int a )
     m_argc++;
     return *this;
 }
+
+LuaScript::Function& LuaScript::Function::operator << ( double a )
+{
+    assert( m_vm );
+    lua_pushnumber( m_vm, a );
+    m_argc++;
+    return *this;
+}

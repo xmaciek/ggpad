@@ -5,9 +5,10 @@ find_package( Threads REQUIRED )
 find_package( Lua REQUIRED )
 
 set( SOURCES
-    main.cpp
+    ggpad.cpp
     lua_script.cpp
     lua_script_function.cpp
+    main.cpp
 )
 
 set( LIBRARIES
