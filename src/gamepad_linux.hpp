@@ -16,30 +16,26 @@
 #pragma once
 
 #include <cstdint>
-#include "macros.hpp"
-#include "lua_script.hpp"
 
-class Gamepad {
-    DISABLE_COPY( Gamepad )
+#include "gamepad.hpp"
+#include "macros.hpp"
+#include "maptable_linux.hpp"
+
+class GamepadLinux : public Gamepad {
+    DISABLE_COPY( GamepadLinux )
 
 public:
-    enum Button : std::int8_t {
-        unknown
-#define MAKE_ENUM( E ) , E
-#include "button_enum.def"
-#undef MAKE_ENUM
-        , max
-    };
+    typedef value_type state_type[ Gamepad::max ];
 
-    typedef std::int8_t value_type;
+private:
+    int m_fd;
+    uint32_t m_vidpid;
+    state_type m_state;
+    const MapTable* m_mapTable;
 
-    typedef struct {
-        Button button;
-        value_type value;
-    } Event;
+public:
+    GamepadLinux( const char* a_devPath );
+    virtual ~GamepadLinux();
 
-    Gamepad() = default;
-    virtual ~Gamepad() = default;
-
-    virtual bool pollChanges( Event* ) = 0;
+    virtual bool pollChanges( Event* ) override;
 };

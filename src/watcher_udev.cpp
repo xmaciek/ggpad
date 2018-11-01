@@ -19,6 +19,8 @@
 #include <memory>
 #include <cstring>
 
+#include "gamepad_linux.hpp"
+
 WatcherUDev::WatcherUDev()
 : Watcher()
 , m_udevPtr( nullptr )
@@ -110,8 +112,7 @@ std::list<Gamepad*> WatcherUDev::newDevices()
 
         m_knownDevices.push_back( pathHash );
         std::sort( m_knownDevices.begin(), m_knownDevices.end() );
-
-        fprintf( stdout, "path: %s\n", devPath );
+        list.push_back( new GamepadLinux( devPath ) );
     }
 
     return list;

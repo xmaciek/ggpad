@@ -16,30 +16,21 @@
 #pragma once
 
 #include <cstdint>
-#include "macros.hpp"
-#include "lua_script.hpp"
+#include "gamepad.hpp"
 
-class Gamepad {
-    DISABLE_COPY( Gamepad )
-
-public:
-    enum Button : std::int8_t {
-        unknown
-#define MAKE_ENUM( E ) , E
-#include "button_enum.def"
-#undef MAKE_ENUM
-        , max
-    };
-
-    typedef std::int8_t value_type;
-
-    typedef struct {
-        Button button;
-        value_type value;
-    } Event;
-
-    Gamepad() = default;
-    virtual ~Gamepad() = default;
-
-    virtual bool pollChanges( Event* ) = 0;
+enum class ConversionType : std::int8_t {
+    Analog
+    , Digital
 };
+
+typedef struct [[gnu::packed]] {
+    std::uint16_t type;
+    std::uint16_t code;
+    std::int32_t minRange;
+    std::int32_t maxRange;
+    ConversionType conversionType;
+    Gamepad::Button buttonMin;
+    Gamepad::Button buttonMax;
+    std::int8_t minVal;
+    std::int8_t maxVal;
+} MapTable;

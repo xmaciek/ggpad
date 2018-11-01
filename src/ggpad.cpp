@@ -17,6 +17,8 @@
 #include "gamepad.hpp"
 #include "watcher_udev.hpp"
 
+#include <thread>
+#include <chrono>
 
 static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
     { "unknown", 0 }
@@ -32,10 +34,24 @@ GGPAD::GGPAD()
 
 int GGPAD::exec()
 {
-    m_deviceWatcher->newDevices();
+    std::list<Gamepad*> list = m_deviceWatcher->newDevices();
+    if ( list.empty() ) {
+        return 0;
+    }
+
     LuaScript script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.doFile( "test1.lua" );
-    script.call( "GGPAD_buttonChanged" ) << Gamepad::X << 1;
+    while ( true ) {
+        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+        std::list<Gamepad::Event> events;
+        Gamepad::Event e;
+        while ( list.front()->pollChanges( &e ) ) {
+            events.push_back( e );
+        }
+        for ( const Gamepad::Event& it : events ) {
+            script.call( "GGPAD_buttonChanged" ) << it.button << it.value;
+        }
+    }
     return 0;
 }
