@@ -28,6 +28,9 @@ private:
 
 public:
     GGPAD();
+    ~GGPAD();
 
+    void setKeyboardState( uint64_t, bool );
+    void foo() {};
     int exec();
 };

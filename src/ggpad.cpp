@@ -13,13 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include <chrono>
+#include <thread>
+
+#include "lua.hpp"
+
 #include "ggpad.hpp"
 #include "gamepad.hpp"
 #include "watcher_udev.hpp"
 #include "systemevent_linux.hpp"
-
-#include <thread>
-#include <chrono>
 
 static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
     { "unknown", 0 }
@@ -28,10 +30,56 @@ static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
 #undef MAKE_ENUM
 };
 
+static const std::vector<LuaScript::Record> KEYBOARD_TABLE {
+    { "unknown", 0 }
+#define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, KEY_ ## VALUE }
+#include "key_enum.def"
+#undef MAKE_ENUM
+};
+
+GGPAD* g_instance = nullptr;
+
+int GGPAD_setKeyboard( struct lua_State* a_vm )
+{
+    if ( !g_instance ) {
+        return 0;
+    }
+
+    if ( lua_gettop( a_vm ) != 2 ) {
+        return 0;
+    }
+
+    for ( int i : { 1, 2 } ) {
+        if ( !lua_isinteger( a_vm, i ) ) {
+            return 0;
+        }
+    }
+
+    g_instance->setKeyboardState( lua_tointeger( a_vm, 1 ), lua_tointeger( a_vm, 2 ) );
+    return 1;
+}
+
+typedef struct { const char* name; lua_CFunction func; } CB_REG;
+constexpr static const CB_REG CALLBACK_TABLE[] = {
+#define REGISTER( FUNC ) { #FUNC, FUNC }
+    REGISTER( GGPAD_setKeyboard )
+#undef REGISTER
+};
+
 GGPAD::GGPAD()
 {
+    if ( !g_instance ) {
+        g_instance = this;
+    }
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_systemEvent = std::make_unique<SystemEventLinux>();
+}
+
+GGPAD::~GGPAD()
+{
+    if ( g_instance == this ) {
+        g_instance = nullptr;
+    }
 }
 
 int GGPAD::exec()
@@ -43,7 +91,14 @@ int GGPAD::exec()
 
     LuaScript script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
+    script.bindTable( "Keyboard", KEYBOARD_TABLE );
+
+    for ( const CB_REG& it : CALLBACK_TABLE ) {
+        lua_register( script.vm(), it.name, it.func );
+    }
+
     script.doFile( "test1.lua" );
+
     bool isRunning = true;
     while ( isRunning ) {
         std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
@@ -53,10 +108,14 @@ int GGPAD::exec()
             events.push_back( e );
         }
         for ( const Gamepad::Event& it : events ) {
-            m_systemEvent->keyboard( KEY_K, 1 );
-            m_systemEvent->keyboard( KEY_K, 0 );
             script.call( "GGPAD_buttonChanged" ) << it.button << it.value;
         }
     }
     return 0;
 }
+
+void GGPAD::setKeyboardState( uint64_t a_key, bool a_state )
+{
+    m_systemEvent->keyboard( a_key, a_state );
+}
+

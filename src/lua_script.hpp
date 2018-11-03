@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -55,8 +56,13 @@ public:
     } Record;
 
     LuaScript();
+    struct lua_State* vm();
     void doFile( const std::string& a_fileName );
     void bindTable( const std::string& a_name, const std::vector<Record>& a_records );
 
     Function call( const std::string& a_funcName );
+
 };
+
+
+

@@ -34,6 +34,11 @@ LuaScript::LuaScript()
     luaL_openlibs( m_vm.get() );
 }
 
+struct lua_State* LuaScript::vm()
+{
+    return m_vm.get();
+}
+
 void LuaScript::bindTable( const std::string& a_name, const std::vector<LuaScript::Record>& a_table )
 {
     assert( m_vm );
@@ -55,3 +60,4 @@ LuaScript::Function LuaScript::call( const std::string& a_funcName )
 {
     return LuaScript::Function( m_vm.get(), a_funcName.c_str() );
 }
+
