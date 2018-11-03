@@ -15,19 +15,29 @@
 
 #pragma once
 
+#include <mutex>
+
+#include <linux/input.h>
+#include <linux/uinput.h>
+
 #include "macros.hpp"
-#include "watcher.hpp"
 #include "systemevent.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
+class SystemEventLinux : public SystemEvent {
+    DISABLE_COPY( SystemEventLinux )
 
 private:
-    std::unique_ptr<Watcher> m_deviceWatcher;
-    std::unique_ptr<SystemEvent> m_systemEvent;
+    std::mutex m_mutex;
+    int32_t m_uinput;
+    struct uinput_user_dev m_virtualDevice;
+    struct input_event m_flush;
+
+    void sendEvent( uint64_t a_type, uint64_t a_code, uint64_t a_value );
 
 public:
-    GGPAD();
+    SystemEventLinux();
+    virtual ~SystemEventLinux();
 
-    int exec();
+    virtual void keyboard( uint64_t a_key, bool a_state ) override;
+
 };

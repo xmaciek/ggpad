@@ -17,6 +17,7 @@ set( SOURCES
     lua_script.cpp
     lua_script_function.cpp
     main.cpp
+    systemevent_linux.cpp
     watcher_udev.cpp
 )
 

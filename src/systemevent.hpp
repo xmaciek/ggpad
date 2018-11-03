@@ -15,19 +15,16 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "macros.hpp"
-#include "watcher.hpp"
-#include "systemevent.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
-
-private:
-    std::unique_ptr<Watcher> m_deviceWatcher;
-    std::unique_ptr<SystemEvent> m_systemEvent;
+class SystemEvent {
+    DISABLE_COPY( SystemEvent )
 
 public:
-    GGPAD();
+    SystemEvent() = default;
+    virtual ~SystemEvent() = default;
 
-    int exec();
+    virtual void keyboard( std::uint64_t a_key, bool a_state ) = 0;
 };
