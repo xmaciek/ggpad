@@ -24,13 +24,14 @@
 #include <unistd.h>
 #include <linux/input.h>
 
+extern const MapTable* GamepadDefault;
 extern const MapTable* xboxOneSBluetooth_0x045E02FD;
 
 static const MapTable* driverFixForVidPid( uint32_t vidpid )
 {
     switch ( vidpid ) {
         case 0x045E02FD: return xboxOneSBluetooth_0x045E02FD;
-        default: return 0;
+        default: return GamepadDefault;
     }
 }
 

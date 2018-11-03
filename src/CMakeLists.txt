@@ -11,6 +11,7 @@ if( !LIBUDEV_FOUND )
 endif()
 
 set( SOURCES
+    gamepad_linux_default.cpp
     gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
     gamepad_linux.cpp
     ggpad.cpp
