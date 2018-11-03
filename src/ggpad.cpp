@@ -37,9 +37,18 @@ static const std::vector<LuaScript::Record> KEYBOARD_TABLE {
 #undef MAKE_ENUM
 };
 
+static const std::vector<LuaScript::Record> MOUSE_TABLE {
+    { "unknown", 0 }
+#define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, BTN_ ## VALUE }
+#define MAKE_ENUM2( NAME, VALUE ) ,{ #NAME, REL_ ## VALUE }
+#include "mouse_enum.def"
+#undef MAKE_ENUM2
+#undef MAKE_ENUM
+};
+
 GGPAD* g_instance = nullptr;
 
-int GGPAD_setKeyboard( struct lua_State* a_vm )
+static int GGPAD_setKeyboard( struct lua_State* a_vm )
 {
     if ( !g_instance ) {
         return 0;
@@ -59,10 +68,31 @@ int GGPAD_setKeyboard( struct lua_State* a_vm )
     return 1;
 }
 
+static int GGPAD_mouseMove( struct lua_State* a_vm )
+{
+    if ( !g_instance ) {
+        return 0;
+    }
+
+    if ( lua_gettop( a_vm ) != 2 ) {
+        return 0;
+    }
+
+    for ( int i : { 1, 2 } ) {
+        if ( !lua_isinteger( a_vm, i ) ) {
+            return 0;
+        }
+    }
+
+    g_instance->mouseMove( lua_tointeger( a_vm, 1 ), lua_tointeger( a_vm, 2 ) );
+    return 1;
+}
+
 typedef struct { const char* name; lua_CFunction func; } CB_REG;
 constexpr static const CB_REG CALLBACK_TABLE[] = {
 #define REGISTER( FUNC ) { #FUNC, FUNC }
     REGISTER( GGPAD_setKeyboard )
+    , REGISTER( GGPAD_mouseMove )
 #undef REGISTER
 };
 
@@ -92,6 +122,7 @@ int GGPAD::exec()
     LuaScript script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
+    script.bindTable( "Mouse", MOUSE_TABLE );
 
     for ( const CB_REG& it : CALLBACK_TABLE ) {
         lua_register( script.vm(), it.name, it.func );
@@ -117,5 +148,10 @@ int GGPAD::exec()
 void GGPAD::setKeyboardState( uint64_t a_key, bool a_state )
 {
     m_systemEvent->keyboard( a_key, a_state );
+}
+
+void GGPAD::mouseMove( uint64_t a_key, int32_t a_state )
+{
+    m_systemEvent->mouseMove( a_key, a_state );
 }
 

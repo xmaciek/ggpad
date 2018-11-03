@@ -13,24 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-
-#include "macros.hpp"
-#include "watcher.hpp"
-#include "systemevent.hpp"
-
-class GGPAD {
-    DISABLE_COPY( GGPAD );
-
-private:
-    std::unique_ptr<Watcher> m_deviceWatcher;
-    std::unique_ptr<SystemEvent> m_systemEvent;
-
-public:
-    GGPAD();
-    ~GGPAD();
-
-    void setKeyboardState( uint64_t, bool );
-    void mouseMove( uint64_t a_axis, int32_t a_delta );
-    int exec();
-};
+MAKE_ENUM( LEFT, LEFT )
+MAKE_ENUM( RIGHT, RIGHT )
+MAKE_ENUM( MIDDLE, MIDDLE )
+MAKE_ENUM2( X, X )
+MAKE_ENUM2( Y, Y )

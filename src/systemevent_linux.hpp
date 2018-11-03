@@ -32,12 +32,13 @@ private:
     struct uinput_user_dev m_virtualDevice;
     struct input_event m_flush;
 
-    void sendEvent( uint64_t a_type, uint64_t a_code, uint64_t a_value );
+    void sendEvent( uint64_t a_type, uint64_t a_code, int32_t a_value );
 
 public:
     SystemEventLinux();
     virtual ~SystemEventLinux();
 
     virtual void keyboard( uint64_t a_key, bool a_state ) override;
+    virtual void mouseMove( uint64_t a_axis, int32_t a_delta ) override;
 
 };

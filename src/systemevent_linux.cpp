@@ -38,6 +38,12 @@ static bool enableInputCodes( int32_t uinput )
     #include "key_enum.def"
     #undef MAKE_ENUM
 
+    #define MAKE_ENUM( A, B ) ::ioctl( uinput, UI_SET_KEYBIT, BTN_ ## B );
+    #define MAKE_ENUM2( A, B ) ::ioctl( uinput, UI_SET_RELBIT, REL_ ## B );
+    #include "mouse_enum.def"
+    #undef MAKE_ENUM2
+    #undef MAKE_ENUM
+
     return true;
 }
 
@@ -102,7 +108,7 @@ SystemEventLinux::~SystemEventLinux()
     ::close( m_uinput );
 }
 
-void SystemEventLinux::sendEvent( uint64_t type, uint64_t code, uint64_t value )
+void SystemEventLinux::sendEvent( uint64_t type, uint64_t code, int32_t value )
 {
     struct input_event event;
     ::memset( &event, 0, sizeof( struct input_event ) );
@@ -120,4 +126,9 @@ void SystemEventLinux::sendEvent( uint64_t type, uint64_t code, uint64_t value )
 void SystemEventLinux::keyboard( uint64_t key, bool state )
 {
     sendEvent( EV_KEY, key, state );
+}
+
+void SystemEventLinux::mouseMove( uint64_t axis, int32_t delta )
+{
+    sendEvent( EV_REL, axis, delta );
 }
