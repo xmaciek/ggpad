@@ -108,7 +108,7 @@ SystemEventLinux::~SystemEventLinux()
     ::close( m_uinput );
 }
 
-void SystemEventLinux::sendEvent( uint64_t type, uint64_t code, int32_t value )
+void SystemEventLinux::sendEvent( uint32_t type, uint32_t code, int32_t value )
 {
     struct input_event event;
     ::memset( &event, 0, sizeof( struct input_event ) );
@@ -123,12 +123,12 @@ void SystemEventLinux::sendEvent( uint64_t type, uint64_t code, int32_t value )
     ::write( m_uinput, &m_flush, sizeof( struct input_event ) );
 }
 
-void SystemEventLinux::keyboard( uint64_t key, bool state )
+void SystemEventLinux::keyboard( uint32_t key, bool state )
 {
     sendEvent( EV_KEY, key, state );
 }
 
-void SystemEventLinux::mouseMove( uint64_t axis, int32_t delta )
+void SystemEventLinux::mouseMove( uint32_t axis, int32_t delta )
 {
     sendEvent( EV_REL, axis, delta );
 }

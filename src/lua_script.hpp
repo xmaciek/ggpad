@@ -57,10 +57,10 @@ public:
 
     LuaScript();
     struct lua_State* vm();
-    void doFile( const std::string& a_fileName );
-    void bindTable( const std::string& a_name, const std::vector<Record>& a_records );
+    void doFile( const char* a_fileName );
+    void bindTable( const char* a_name, const std::vector<Record>& a_records );
 
-    Function call( const std::string& a_funcName );
+    Function call( const char* a_funcName );
 
 };
 

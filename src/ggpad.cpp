@@ -20,8 +20,10 @@
 
 #include "ggpad.hpp"
 #include "gamepad.hpp"
+#include "lua_binder.hpp"
 #include "watcher_udev.hpp"
 #include "systemevent_linux.hpp"
+
 
 static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
     { "unknown", 0 }
@@ -46,60 +48,12 @@ static const std::vector<LuaScript::Record> MOUSE_TABLE {
 #undef MAKE_ENUM
 };
 
-GGPAD* g_instance = nullptr;
-
-static int GGPAD_setKeyboard( struct lua_State* a_vm )
-{
-    if ( !g_instance ) {
-        return 0;
-    }
-
-    if ( lua_gettop( a_vm ) != 2 ) {
-        return 0;
-    }
-
-    for ( int i : { 1, 2 } ) {
-        if ( !lua_isinteger( a_vm, i ) ) {
-            return 0;
-        }
-    }
-
-    g_instance->setKeyboardState( lua_tointeger( a_vm, 1 ), lua_tointeger( a_vm, 2 ) );
-    return 1;
-}
-
-static int GGPAD_mouseMove( struct lua_State* a_vm )
-{
-    if ( !g_instance ) {
-        return 0;
-    }
-
-    if ( lua_gettop( a_vm ) != 2 ) {
-        return 0;
-    }
-
-    for ( int i : { 1, 2 } ) {
-        if ( !lua_isinteger( a_vm, i ) ) {
-            return 0;
-        }
-    }
-
-    g_instance->mouseMove( lua_tointeger( a_vm, 1 ), lua_tointeger( a_vm, 2 ) );
-    return 1;
-}
-
-typedef struct { const char* name; lua_CFunction func; } CB_REG;
-constexpr static const CB_REG CALLBACK_TABLE[] = {
-#define REGISTER( FUNC ) { #FUNC, FUNC }
-    REGISTER( GGPAD_setKeyboard )
-    , REGISTER( GGPAD_mouseMove )
-#undef REGISTER
-};
+GGPAD* GGPAD::s_instance = nullptr;
 
 GGPAD::GGPAD()
 {
-    if ( !g_instance ) {
-        g_instance = this;
+    if ( !s_instance ) {
+        s_instance = this;
     }
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_systemEvent = std::make_unique<SystemEventLinux>();
@@ -107,8 +61,8 @@ GGPAD::GGPAD()
 
 GGPAD::~GGPAD()
 {
-    if ( g_instance == this ) {
-        g_instance = nullptr;
+    if ( s_instance == this ) {
+        s_instance = nullptr;
     }
 }
 
@@ -124,6 +78,11 @@ int GGPAD::exec()
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
 
+    typedef struct { const char* name; lua_CFunction func; } CB_REG;
+    constexpr static const CB_REG CALLBACK_TABLE[] = {
+        { "GGPAD_setKeyboard", &LuaBinder::facade<GGPAD::KbdFunc*,&GGPAD::setKeyboardState, int, bool> }
+        , { "GGPAD_mouseMove", &LuaBinder::facade<GGPAD::MouseFunc*,&GGPAD::mouseMove, int, int> }
+    };
     for ( const CB_REG& it : CALLBACK_TABLE ) {
         lua_register( script.vm(), it.name, it.func );
     }
@@ -145,13 +104,13 @@ int GGPAD::exec()
     return 0;
 }
 
-void GGPAD::setKeyboardState( uint64_t a_key, bool a_state )
+void GGPAD::setKeyboardState( uint32_t a_key, bool a_state )
 {
-    m_systemEvent->keyboard( a_key, a_state );
+    s_instance->m_systemEvent->keyboard( a_key, a_state );
 }
 
-void GGPAD::mouseMove( uint64_t a_key, int32_t a_state )
+void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
 {
-    m_systemEvent->mouseMove( a_key, a_state );
+    s_instance->m_systemEvent->mouseMove( a_key, a_state );
 }
 

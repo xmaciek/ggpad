@@ -23,14 +23,20 @@ class GGPAD {
     DISABLE_COPY( GGPAD );
 
 private:
+    static GGPAD* s_instance;
+
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
+
+    using KbdFunc = void( uint32_t, bool );
+    static void setKeyboardState( uint32_t, bool );
+
+    using MouseFunc = void( uint32_t, int32_t );
+    static void mouseMove( uint32_t a_axis, int32_t a_delta );
 
 public:
     GGPAD();
     ~GGPAD();
 
-    void setKeyboardState( uint64_t, bool );
-    void mouseMove( uint64_t a_axis, int32_t a_delta );
     int exec();
 };

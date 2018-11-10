@@ -39,7 +39,7 @@ struct lua_State* LuaScript::vm()
     return m_vm.get();
 }
 
-void LuaScript::bindTable( const std::string& a_name, const std::vector<LuaScript::Record>& a_table )
+void LuaScript::bindTable( const char* a_name, const std::vector<LuaScript::Record>& a_table )
 {
     assert( m_vm );
     lua_newtable( m_vm.get() );
@@ -47,17 +47,17 @@ void LuaScript::bindTable( const std::string& a_name, const std::vector<LuaScrip
         lua_pushinteger( m_vm.get(), it.value );
         lua_setfield( m_vm.get(), -2, it.name );
     }
-    lua_setglobal( m_vm.get(), a_name.c_str() );
+    lua_setglobal( m_vm.get(), a_name );
 }
 
-void LuaScript::doFile( const std::string& a_fileName )
+void LuaScript::doFile( const char* a_fileName )
 {
     assert( m_vm );
-    luaL_dofile( m_vm.get(), a_fileName.c_str() );
+    luaL_dofile( m_vm.get(), a_fileName );
 }
 
-LuaScript::Function LuaScript::call( const std::string& a_funcName )
+LuaScript::Function LuaScript::call( const char* a_funcName )
 {
-    return LuaScript::Function( m_vm.get(), a_funcName.c_str() );
+    return LuaScript::Function( m_vm.get(), a_funcName );
 }
 

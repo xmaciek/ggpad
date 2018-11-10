@@ -26,6 +26,6 @@ public:
     SystemEvent() = default;
     virtual ~SystemEvent() = default;
 
-    virtual void keyboard( uint64_t a_key, bool a_state ) = 0;
-    virtual void mouseMove( uint64_t a_axis, int32_t a_delta ) = 0;
+    virtual void keyboard( uint32_t a_key, bool a_state ) = 0;
+    virtual void mouseMove( uint32_t a_axis, int32_t a_delta ) = 0;
 };
