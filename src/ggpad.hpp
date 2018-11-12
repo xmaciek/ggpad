@@ -45,7 +45,7 @@ private:
     std::unique_ptr<SystemEvent> m_systemEvent;
 
     using KbdFunc = void( uint32_t, bool );
-    static void setKeyboardState( uint32_t, bool );
+    static void setKeyboard( uint32_t, bool );
 
     using MouseFunc = void( uint32_t, int32_t );
     static void mouseMove( uint32_t a_axis, int32_t a_delta );

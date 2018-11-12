@@ -39,6 +39,6 @@ public:
     virtual ~SystemEventLinux();
 
     virtual void keyboard( uint32_t a_key, bool a_state ) override;
-    virtual void mouseMove( uint32_t a_axis, int32_t a_delta ) override;
+    virtual void mouseMove( int32_t a_deltaX, int32_t a_deltaY ) override;
 
 };

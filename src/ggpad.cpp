@@ -86,7 +86,7 @@ int GGPAD::exec()
 
     typedef struct { const char* name; lua_CFunction func; } CB_REG;
     constexpr static const CB_REG CALLBACK_TABLE[] = {
-        { "GGPAD_setKeyboard", &LuaBinder::facade<GGPAD::KbdFunc*,&GGPAD::setKeyboardState, int, bool> }
+        { "GGPAD_keyboardSet", &LuaBinder::facade<GGPAD::KbdFunc*,&GGPAD::setKeyboard, int, bool> }
         , { "GGPAD_mouseMove", &LuaBinder::facade<GGPAD::MouseFunc*,&GGPAD::mouseMove, int, int> }
     };
     for ( const CB_REG& it : CALLBACK_TABLE ) {
@@ -118,7 +118,7 @@ void GGPAD::eventsLoop()
             }
             for ( const Gamepad::Event& it : events ) {
                 LuaScript::LockGuard lockGuard( *binding.second );
-                binding.second->call( "GGPAD_buttonChanged" ) << it.button << it.value;
+                binding.second->call( "GGPAD_event" ) << it.button << it.value;
             }
         }
     }
@@ -140,7 +140,7 @@ void GGPAD::updateLoop()
     }
 }
 
-void GGPAD::setKeyboardState( uint32_t a_key, bool a_state )
+void GGPAD::setKeyboard( uint32_t a_key, bool a_state )
 {
     s_instance->m_systemEvent->keyboard( a_key, a_state );
 }

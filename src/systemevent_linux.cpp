@@ -128,7 +128,12 @@ void SystemEventLinux::keyboard( uint32_t key, bool state )
     sendEvent( EV_KEY, key, state );
 }
 
-void SystemEventLinux::mouseMove( uint32_t axis, int32_t delta )
+void SystemEventLinux::mouseMove( int32_t a_deltaX, int32_t a_deltaY )
 {
-    sendEvent( EV_REL, axis, delta );
+    if ( a_deltaX != 0 ) {
+        sendEvent( EV_REL, REL_X, a_deltaX );
+    }
+    if ( a_deltaY != 0 ) {
+        sendEvent( EV_REL, REL_Y, a_deltaY );
+    }
 }
