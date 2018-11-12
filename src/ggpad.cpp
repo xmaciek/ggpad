@@ -51,6 +51,7 @@ static const std::vector<LuaScript::Record> MOUSE_TABLE {
 GGPAD* GGPAD::s_instance = nullptr;
 
 GGPAD::GGPAD()
+: m_isRunning( true )
 {
     if ( !s_instance ) {
         s_instance = this;
@@ -61,6 +62,8 @@ GGPAD::GGPAD()
 
 GGPAD::~GGPAD()
 {
+    m_isRunning = false;
+
     if ( s_instance == this ) {
         s_instance = nullptr;
     }
@@ -73,7 +76,10 @@ int GGPAD::exec()
         return 0;
     }
 
-    LuaScript script;
+    m_list.push_back( Binding() );
+    m_list.back().first = list.front();
+    m_list.back().second = new LuaScript();
+    LuaScript& script = *m_list.back().second;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
@@ -89,19 +95,49 @@ int GGPAD::exec()
 
     script.doFile( "test1.lua" );
 
-    bool isRunning = true;
-    while ( isRunning ) {
-        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
-        std::list<Gamepad::Event> events;
-        Gamepad::Event e;
-        while ( list.front()->pollChanges( &e ) ) {
-            events.push_back( e );
-        }
-        for ( const Gamepad::Event& it : events ) {
-            script.call( "GGPAD_buttonChanged" ) << it.button << it.value;
+    m_threadEvents = std::thread( &GGPAD::eventsLoop, this );
+    m_threadUpdate = std::thread( &GGPAD::updateLoop, this );
+    while ( m_isRunning ) {
+        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+    }
+
+    m_threadEvents.join();
+    m_threadUpdate.join();
+    return 0;
+}
+
+void GGPAD::eventsLoop()
+{
+    while ( m_isRunning ) {
+        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+        for ( Binding& binding : m_list ) {
+            std::list<Gamepad::Event> events;
+            Gamepad::Event e;
+            while ( binding.first->pollChanges( &e ) ) {
+                events.push_back( e );
+            }
+            for ( const Gamepad::Event& it : events ) {
+                LuaScript::LockGuard lockGuard( *binding.second );
+                binding.second->call( "GGPAD_buttonChanged" ) << it.button << it.value;
+            }
         }
     }
-    return 0;
+}
+
+void GGPAD::updateLoop()
+{
+    std::chrono::steady_clock::time_point lastUpdate = std::chrono::steady_clock::now();
+    while ( m_isRunning ) {
+        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        const uint64_t d = std::chrono::duration_cast<std::chrono::milliseconds>( now - lastUpdate ).count();
+        double deltaTime = (double)d / 1000;
+        lastUpdate = now;
+        for ( Binding& binding : m_list ) {
+            LuaScript::LockGuard lockGuard( *binding.second );
+            binding.second->call( "GGPAD_update" ) << deltaTime;
+        }
+    }
 }
 
 void GGPAD::setKeyboardState( uint32_t a_key, bool a_state )

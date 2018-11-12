@@ -15,15 +15,31 @@
 
 #pragma once
 
+#include <list>
+#include <memory>
+#include <thread>
+#include <utility>
+
+#include "gamepad.hpp"
+#include "lua_script.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
 #include "systemevent.hpp"
+
+
 
 class GGPAD {
     DISABLE_COPY( GGPAD );
 
 private:
     static GGPAD* s_instance;
+
+    bool m_isRunning;
+    std::thread m_threadEvents;
+    std::thread m_threadUpdate;
+
+    typedef std::pair<Gamepad*,LuaScript*> Binding;
+    std::list<Binding> m_list;
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
@@ -33,6 +49,10 @@ private:
 
     using MouseFunc = void( uint32_t, int32_t );
     static void mouseMove( uint32_t a_axis, int32_t a_delta );
+
+
+    void eventsLoop();
+    void updateLoop();
 
 public:
     GGPAD();

@@ -34,6 +34,16 @@ LuaScript::LuaScript()
     luaL_openlibs( m_vm.get() );
 }
 
+void LuaScript::lock()
+{
+    m_mutex.lock();
+}
+
+void LuaScript::unlock()
+{
+    m_mutex.unlock();
+}
+
 struct lua_State* LuaScript::vm()
 {
     return m_vm.get();
