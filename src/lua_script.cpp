@@ -66,6 +66,15 @@ void LuaScript::doFile( const char* a_fileName )
     luaL_dofile( m_vm.get(), a_fileName );
 }
 
+bool LuaScript::hasFunction( const char* a_funcName )
+{
+    assert( a_funcName );
+    lua_getglobal( m_vm.get(), a_funcName );
+    const bool ret = lua_isfunction( m_vm.get(), -1 );
+    lua_pop( m_vm.get(), 1 );
+    return ret;
+}
+
 LuaScript::Function LuaScript::call( const char* a_funcName )
 {
     return LuaScript::Function( m_vm.get(), a_funcName );

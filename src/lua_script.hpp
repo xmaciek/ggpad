@@ -67,6 +67,7 @@ public:
     void doFile( const char* a_fileName );
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
 
+    bool hasFunction( const char* a_funcName );
     Function call( const char* a_funcName );
 
 };
