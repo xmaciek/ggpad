@@ -15,38 +15,38 @@
 
 #pragma once
 
-#include <list>
-#include <memory>
-#include <thread>
-#include <utility>
-
-#include "binding.hpp"
+#include "gamepad.hpp"
+#include "lua_script.hpp"
 #include "macros.hpp"
-#include "watcher.hpp"
-#include "systemevent.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
+#include <memory>
+#include <mutex>
+#include <thread>
 
-private:
-    static GGPAD* s_instance;
-
-    bool m_isRunning;
-
-    std::list<std::unique_ptr<Binding>> m_list;
-
-    std::unique_ptr<Watcher> m_deviceWatcher;
-    std::unique_ptr<SystemEvent> m_systemEvent;
-
-    using KbdFunc = void( uint32_t, bool );
-    static void setKeyboard( uint32_t, bool );
-
-    using MouseFunc = void( uint32_t, int32_t );
-    static void mouseMove( uint32_t a_axis, int32_t a_delta );
+class Binding {
+    DISABLE_COPY( Binding );
 
 public:
-    GGPAD();
-    ~GGPAD();
+    using Ptr = std::unique_ptr<Binding>;
 
-    int exec();
+    bool m_hasUpdate : 1;
+    bool m_hasEvent : 1;
+    bool m_hasNativeEvent : 1;
+    bool m_isRunning : 1;
+
+    Gamepad* m_gamepad;
+    LuaScript* m_script;
+
+    std::thread m_updateThread;
+    std::thread m_eventThread;
+    std::mutex m_mutex;
+
+    Binding();
+    ~Binding();
+
+    void run();
+    void eventLoop();
+    void updateLoop();
+
+    static bool isInvalid( const Binding::Ptr& it );
 };
