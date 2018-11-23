@@ -16,6 +16,9 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
+#include <list>
+
 #include "macros.hpp"
 #include "lua_script.hpp"
 
@@ -23,7 +26,8 @@ class Gamepad {
     DISABLE_COPY( Gamepad )
 
 public:
-    enum Button : std::int8_t {
+    typedef int16_t value_type;
+    enum Button : int16_t {
         unknown
 #define MAKE_ENUM( E ) , E
 #include "button_enum.def"
@@ -31,15 +35,21 @@ public:
         , max
     };
 
-    typedef std::int8_t value_type;
 
-    typedef struct {
+    typedef struct [[gnu::packed]] {
         Button button;
         value_type value;
+        constexpr static value_type min() { return std::numeric_limits<value_type>::min() + 1; }
+        constexpr static value_type max() { return std::numeric_limits<value_type>::max(); }
+        // native representation
+        int16_t _type;
+        int16_t _code;
+        int32_t _value;
     } Event;
 
     Gamepad() = default;
     virtual ~Gamepad() = default;
 
-    virtual bool pollChanges( Event* ) = 0;
+    virtual bool isConnected() const = 0;
+    virtual std::list<Event> pollChanges() = 0;
 };

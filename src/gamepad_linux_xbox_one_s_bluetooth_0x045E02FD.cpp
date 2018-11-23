@@ -27,12 +27,12 @@ constexpr static const MapTable D045E02FD[] = {
     , { EV_KEY, BTN_THUMBR, 0, 1, ConversionType::Digital, Gamepad::R3, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_START, 0, 1, ConversionType::Digital, Gamepad::START, Gamepad::unknown, 0, 1 }
     , { EV_KEY, 0x009E, 0, 1, ConversionType::Digital, Gamepad::SELECT, Gamepad::unknown, 0, 1 }
-    , { EV_ABS, ABS_X, 0, 0xFFFF, ConversionType::Analog, Gamepad::LX, Gamepad::unknown, -127, 127 }
-    , { EV_ABS, ABS_Y, 0, 0xFFFF, ConversionType::Analog, Gamepad::LY, Gamepad::unknown, 127, -127 }
-    , { EV_ABS, 0x0002, 0, 0xFFFF, ConversionType::Analog, Gamepad::RX, Gamepad::unknown, -127, 127 }
-    , { EV_ABS, 0x0005, 0, 0xFFFF, ConversionType::Analog, Gamepad::RY, Gamepad::unknown, 127, -127 }
-    , { EV_ABS, 0x000A, 0, 1023, ConversionType::Analog, Gamepad::L2, Gamepad::unknown, 0, 127 }
-    , { EV_ABS, 0x0009, 0, 1023, ConversionType::Analog, Gamepad::R2, Gamepad::unknown, 0, 127 }
+    , { EV_ABS, ABS_X, 0, 0xFFFF, ConversionType::Analog, Gamepad::LX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, ABS_Y, 0, 0xFFFF, ConversionType::Analog, Gamepad::LY, Gamepad::unknown, Gamepad::Event::max(), Gamepad::Event::min() }
+    , { EV_ABS, 0x0002, 0, 0xFFFF, ConversionType::Analog, Gamepad::RX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, 0x0005, 0, 0xFFFF, ConversionType::Analog, Gamepad::RY, Gamepad::unknown, Gamepad::Event::max(), Gamepad::Event::min() }
+    , { EV_ABS, 0x000A, 0, 1023, ConversionType::Analog, Gamepad::L2, Gamepad::unknown, 0, Gamepad::Event::max() }
+    , { EV_ABS, 0x0009, 0, 1023, ConversionType::Analog, Gamepad::R2, Gamepad::unknown, 0, Gamepad::Event::max() }
     , { EV_ABS, ABS_HAT0X, -1, 1, ConversionType::Digital, Gamepad::LEFT, Gamepad::RIGHT, 0, 1 }
     , { EV_ABS, ABS_HAT0Y, -1, 1, ConversionType::Digital, Gamepad::UP, Gamepad::DOWN, 0, 1 }
     , { 0 }

@@ -37,5 +37,6 @@ public:
     GamepadLinux( const char* a_devPath );
     virtual ~GamepadLinux();
 
-    virtual bool pollChanges( Event* ) override;
+    virtual bool isConnected() const override;
+    virtual std::list<Gamepad::Event> pollChanges() override;
 };

@@ -36,11 +36,12 @@ Binding::Binding()
 
 Binding::~Binding()
 {
-    if ( m_isRunning ) {
+    bool active = m_isRunning;
+    m_isRunning = false;
+    if ( active ) {
         m_eventThread.join();
         m_updateThread.join();
     }
-    m_isRunning = false;
     delete m_gamepad;
     delete m_script;
 }
@@ -73,25 +74,19 @@ void Binding::eventLoop()
     assert( m_gamepad );
     assert( m_script );
 
-    const char* funcName = 0;
-    if ( m_hasNativeEvent ) {
-        funcName = "GGPAD_nativeEvent";
-    } else if ( m_hasEvent ) {
-        funcName = "GGPAD_event";
-    } else {
+    if ( !m_hasNativeEvent && !m_hasEvent ) {
         return;
     }
 
     while ( m_isRunning ) {
-        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
-        std::list<Gamepad::Event> events;
-        Gamepad::Event e;
-        while ( m_gamepad->pollChanges( &e ) ) {
-            events.push_back( e );
-        }
+        std::list<Gamepad::Event> events = m_gamepad->pollChanges();
         LuaScript::LockGuard lockGuard( *m_script );
         for ( const Gamepad::Event& it : events ) {
-            m_script->call( funcName ) << it.button << it.value;
+            if ( m_hasNativeEvent ) {
+                m_script->call( "GGPAD_nativeEvent" ) << it._type << it._code << it._value;
+            } else {
+                m_script->call( "GGPAD_event" ) << it.button << it.value;
+            }
         }
     }
 }

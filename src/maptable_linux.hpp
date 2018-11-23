@@ -31,6 +31,6 @@ typedef struct [[gnu::packed]] {
     ConversionType conversionType;
     Gamepad::Button buttonMin;
     Gamepad::Button buttonMax;
-    std::int8_t minVal;
-    std::int8_t maxVal;
+    Gamepad::value_type minVal;
+    Gamepad::value_type maxVal;
 } MapTable;

@@ -21,6 +21,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <unistd.h>
 #include <linux/input.h>
 
@@ -64,59 +65,120 @@ GamepadLinux::~GamepadLinux()
     }
 }
 
-bool GamepadLinux::pollChanges( Gamepad::Event* a_event )
+static bool waitForEvent( int* fd )
 {
-    if ( !m_mapTable ) {
+    assert( fd );
+    assert( *fd > 0 );
+
+    struct pollfd p;
+    p.fd = *fd;
+    p.events = POLLIN;
+    const int ret = poll( &p, 1, 10 );
+
+    // device lost
+    if ( ret < 0 ) {
+        ::close( *fd );
+        *fd = -1;
         return false;
     }
 
-    struct input_event ev;
-    const int ret = ::read( m_fd, &ev, sizeof( ev ) );
-    int e = errno;
-    if ( ret != sizeof( ev ) ) {
-        return false;
-    }
-    if ( e != EAGAIN ) {
+    // OK or timeout
+    return ret > 0;
+}
+
+static bool getEvent( int* fd, struct input_event* ev )
+{
+    assert( fd );
+    assert( *fd > 0 );
+    assert( ev );
+
+    if ( !waitForEvent( fd ) ) {
         return false;
     }
 
-    const MapTable* entry = m_mapTable;
+    const int ret = ::read( *fd, ev, sizeof( struct input_event ) );
+    const int e = errno;
+    if ( ret == sizeof( struct input_event ) ) {
+        return true;
+    }
+
+    switch ( e ) {
+        default: // device lost
+            fprintf( stderr, "Unhandled errno %d\n", e );
+            ::close( *fd );
+            *fd = -1;
+            [[fallthrough]];
+        case EAGAIN:
+            break;
+    }
+    return false;
+}
+
+static void convertEvent( const MapTable* entry, struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
+{
+    assert( entry );
+    assert( a_evIn );
+    assert( a_evOut );
+
+    a_evOut->_type = a_evIn->type;
+    a_evOut->_code = a_evIn->code;
+    a_evOut->_value = a_evIn->value;
+
     while ( entry->type ) {
-        if ( entry->type == ev.type && entry->code == ev.code ) {
+        if ( entry->type == a_evIn->type && entry->code == a_evIn->code ) {
             break;
         }
         entry++;
     }
+
     if ( !entry->type ) {
-        return false;
+        return;
     }
 
     if ( entry->conversionType == ConversionType::Digital && entry->type == EV_KEY ) {
-        a_event->button = entry->buttonMin;
-        a_event->value = ev.value;
-        return true;
+        a_evOut->button = entry->buttonMin;
+        a_evOut->value = a_evIn->value;
+        return;
     }
 
     if ( entry->conversionType == ConversionType::Analog && entry->type == EV_ABS ) {
         int v = entry->maxVal - entry->minVal;
-        double d = (double)ev.value / entry->maxRange;
-        a_event->value = v * d + entry->minVal;
-        a_event->button = entry->buttonMin;
-        return true;
+        double d = (double)a_evIn->value / entry->maxRange;
+        a_evOut->value = v * d + entry->minVal;
+        a_evOut->button = entry->buttonMin;
+        return;
     }
 
     if ( entry->conversionType == ConversionType::Digital && entry->type == EV_ABS ) {
-        if ( ev.value <= entry->minRange ) {
-            a_event->button = entry->buttonMin;
-            a_event->value = m_state[ entry->buttonMin ] = entry->maxVal;
-        } else if ( ev.value >= entry->maxRange ) {
-            a_event->button = entry->buttonMax;
-            a_event->value = m_state[ entry->buttonMax ] = entry->maxVal;
+        if ( a_evIn->value <= entry->minRange ) {
+            a_evOut->button = entry->buttonMin;
+            a_evOut->value = a_state[ entry->buttonMin ] = entry->maxVal;
+        } else if ( a_evIn->value >= entry->maxRange ) {
+            a_evOut->button = entry->buttonMax;
+            a_evOut->value = a_state[ entry->buttonMax ] = entry->maxVal;
         } else {
-            a_event->button = m_state[ entry->buttonMin ] ? entry->buttonMin : entry->buttonMax;
-            a_event->value = m_state[ a_event->button ] = entry->minVal;
+            a_evOut->button = a_state[ entry->buttonMin ] ? entry->buttonMin : entry->buttonMax;
+            a_evOut->value = a_state[ a_evOut->button ] = entry->minVal;
         }
-        return true;
     }
-    return false;
+}
+
+std::list<Gamepad::Event> GamepadLinux::pollChanges()
+{
+    if ( !m_mapTable ) {
+        return {};
+    }
+
+    struct input_event ev;
+    std::list<Gamepad::Event> list;
+    while ( getEvent( &m_fd, &ev ) ) {
+        list.push_back( Gamepad::Event() );
+        convertEvent( m_mapTable, &ev, &list.back(), m_state );
+    }
+    return list;
+}
+
+bool GamepadLinux::isConnected() const
+{
+    return m_fd > 0;
 }
