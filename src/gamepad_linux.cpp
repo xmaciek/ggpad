@@ -42,7 +42,7 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
 , m_vidpid( 0 )
 {
     assert( a_devPath );
-    m_fd = ::open( a_devPath, O_RDWR | O_NONBLOCK );
+    m_fd = ::open( a_devPath, O_RDONLY | O_NONBLOCK );
     if ( m_fd < 0 ) {
         assert( !"unable to open device path" );
         return;
@@ -98,10 +98,6 @@ static bool getEvent( int* fd, struct input_event* ev )
 
     const int ret = ::read( *fd, ev, sizeof( struct input_event ) );
     const int e = errno;
-    if ( ret == sizeof( struct input_event ) ) {
-        return true;
-    }
-
     switch ( e ) {
         default: // device lost
             fprintf( stderr, "Unhandled errno %d\n", e );
@@ -109,12 +105,17 @@ static bool getEvent( int* fd, struct input_event* ev )
             *fd = -1;
             [[fallthrough]];
         case EAGAIN:
+            return false;
+        case 0:
+            // all ok
             break;
     }
-    return false;
+
+    assert( ret == sizeof( struct input_event ) );
+    return true;
 }
 
-static void convertEvent( const MapTable* entry, struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
+static void convertEvent( const MapTable* entry, const struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
 {
     assert( entry );
     assert( a_evIn );
@@ -163,18 +164,37 @@ static void convertEvent( const MapTable* entry, struct input_event* a_evIn, Gam
     }
 }
 
+static bool isBlacklistEvent( const struct input_event& ev )
+{
+    switch ( ev.type ) {
+        case 0:
+        case EV_MSC:
+            return true;
+        default:
+            return false;
+    }
+}
+
 std::list<Gamepad::Event> GamepadLinux::pollChanges()
 {
     if ( !m_mapTable ) {
         return {};
     }
 
-    struct input_event ev;
-    std::list<Gamepad::Event> list;
+    // grab all events before doing conversion to avoid read-convert-read-convert endless loop
+    struct input_event ev{ 0 };
+    std::list<struct input_event> events;
     while ( getEvent( &m_fd, &ev ) ) {
-        list.push_back( Gamepad::Event() );
-        convertEvent( m_mapTable, &ev, &list.back(), m_state );
+        if ( !isBlacklistEvent( ev ) ) {
+            events.push_back( ev );
+        }
     }
+
+    std::list<Gamepad::Event> list;
+    for ( const struct input_event& it : events ) {
+        list.push_back( Gamepad::Event() );
+        convertEvent( m_mapTable, &it, &list.back(), m_state );
+    };
     return list;
 }
 
