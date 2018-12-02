@@ -64,7 +64,7 @@ void Binding::updateLoop()
     const double deltaTime = 5.0 / 1000;
     while ( m_isRunning ) {
         std::this_thread::sleep_for( std::chrono::milliseconds( 5 ) );
-        LuaScript::LockGuard lockGuard( *m_script );
+        LockGuard lockGuard( m_mutex );
         m_script->call( "GGPAD_update" ) << deltaTime;
     }
 }
@@ -80,7 +80,7 @@ void Binding::eventLoop()
 
     while ( m_isRunning ) {
         std::list<Gamepad::Event> events = m_gamepad->pollChanges();
-        LuaScript::LockGuard lockGuard( *m_script );
+        LockGuard lockGuard( m_mutex );
         for ( const Gamepad::Event& it : events ) {
             if ( m_hasNativeEvent ) {
                 m_script->call( "GGPAD_nativeEvent" ) << it._type << it._code << it._value;

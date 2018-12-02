@@ -28,6 +28,7 @@ class Binding {
 
 public:
     using Ptr = std::unique_ptr<Binding>;
+    using LockGuard = std::lock_guard<std::mutex>;
 
     bool m_hasUpdate : 1;
     bool m_hasEvent : 1;

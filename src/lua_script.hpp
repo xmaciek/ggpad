@@ -16,7 +16,6 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -28,7 +27,6 @@ class LuaScript {
     DISABLE_COPY( LuaScript )
 
 private:
-    std::mutex m_mutex;
     std::unique_ptr<struct lua_State, void(*)(struct lua_State*)> m_vm;
 
 public:
@@ -56,12 +54,7 @@ public:
         int value;
     } Record;
 
-    typedef std::lock_guard<LuaScript> LockGuard;
-
     LuaScript();
-
-    void lock();
-    void unlock();
 
     struct lua_State* vm();
     void doFile( const char* a_fileName );
