@@ -28,25 +28,27 @@
 class GGPAD {
     DISABLE_COPY( GGPAD );
 
+public:
+    using BindList = std::list<std::unique_ptr<Binding>>;
+    using KbdFunc = void( uint32_t, bool );
+    using MouseFunc = void( uint32_t, int32_t );
+
 private:
     static GGPAD* s_instance;
 
     bool m_isRunning;
 
-    std::list<std::unique_ptr<Binding>> m_list;
+    BindList m_list;
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
 
-    using KbdFunc = void( uint32_t, bool );
-    static void setKeyboard( uint32_t, bool );
-
-    using MouseFunc = void( uint32_t, int32_t );
-    static void mouseMove( uint32_t a_axis, int32_t a_delta );
-
 public:
     GGPAD();
     ~GGPAD();
+
+    static void setKeyboard( uint32_t, bool );
+    static void mouseMove( uint32_t a_axis, int32_t a_delta );
 
     int exec();
 };

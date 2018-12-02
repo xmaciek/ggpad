@@ -69,17 +69,12 @@ GGPAD::~GGPAD()
     }
 }
 
-int GGPAD::exec()
+static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Binding>>* a_bindList )
 {
-    std::list<Gamepad*> list = m_deviceWatcher->newDevices();
-    if ( list.empty() ) {
-        return 0;
-    }
-
-    m_list.push_back( std::make_unique<Binding>() );
-    m_list.back()->m_gamepad = list.front();
-    m_list.back()->m_script = new LuaScript();
-    LuaScript& script = *m_list.back()->m_script;
+    a_bindList->push_back( std::make_unique<Binding>() );
+    a_bindList->back()->m_gamepad = a_gamepad;
+    a_bindList->back()->m_script = new LuaScript();
+    LuaScript& script = *a_bindList->back()->m_script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
@@ -95,11 +90,23 @@ int GGPAD::exec()
 
     script.doFile( "test1.lua" );
 
-    m_list.back()->m_hasUpdate = script.hasFunction( "GGPAD_update" );
-    m_list.back()->m_hasEvent = script.hasFunction( "GGPAD_event" );
-    m_list.back()->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
+    a_bindList->back()->m_hasUpdate = script.hasFunction( "GGPAD_update" );
+    a_bindList->back()->m_hasEvent = script.hasFunction( "GGPAD_event" );
+    a_bindList->back()->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
 
-    m_list.back()->run();
+    a_bindList->back()->run();
+}
+
+int GGPAD::exec()
+{
+    std::list<Gamepad*> list = m_deviceWatcher->newDevices();
+    if ( list.empty() ) {
+        return 0;
+    }
+
+    for ( Gamepad* it : list ) {
+        pushNewBinding( it, &m_list );
+    }
 
     while ( m_isRunning ) {
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
