@@ -21,7 +21,7 @@
 
 bool Binding::isInvalid( const Binding::Ptr& it )
 {
-    return !it || !it->m_gamepad;
+    return !it || !it->m_gamepad || !it->m_gamepad->isConnected();
 }
 
 Binding::Binding()
