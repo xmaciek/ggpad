@@ -16,12 +16,13 @@
 #include "watcher_udev.hpp"
 
 #include <algorithm>
-#include <memory>
 #include <cstring>
+#include <memory>
 
 #include <poll.h>
 
 #include "gamepad_linux.hpp"
+#include "wrap_udev.hpp"
 
 WatcherUDev::WatcherUDev()
 : Watcher()
@@ -86,26 +87,22 @@ std::list<Gamepad*> WatcherUDev::currentDevices()
             continue;
         }
 
-        struct udev_device* device = udev_device_new_from_syspath( m_udevPtr, path );
-        const char* devPath = udev_device_get_devnode( device );
+        UDevDevice device = udev_device_new_from_syspath( m_udevPtr, path );
+        const char* devPath = device.devnode();
         if ( !devPath ) {
-            udev_device_unref( device );
             continue;
         }
 
-        const char* isJoystick = udev_device_get_property_value( device, "ID_INPUT_JOYSTICK" );
+        const char* isJoystick = device.propertyValue( "ID_INPUT_JOYSTICK" );
         if ( !isJoystick || *isJoystick == '0' ) {
-            udev_device_unref( device );
             continue;
         }
 
         if ( std::strstr( path, "virtual" ) ) {
-            udev_device_unref( device );
             continue;
         }
 
         if ( !std::strstr( path, "event" ) ) {
-            udev_device_unref( device );
             continue;
         }
 
@@ -127,35 +124,31 @@ std::list<Gamepad*> WatcherUDev::newDevices()
 {
     std::list<Gamepad*> list;
     while ( waitForEvent( udev_monitor_get_fd( m_udevMonitorPtr ) ) ) {
-        struct udev_device* device = udev_monitor_receive_device( m_udevMonitorPtr );
+        UDevDevice device = udev_monitor_receive_device( m_udevMonitorPtr );
         if ( !device ) {
             continue;
         }
 
-        const char* isJoystick = udev_device_get_property_value( device, "ID_INPUT_JOYSTICK" );
+        const char* isJoystick = device.propertyValue( "ID_INPUT_JOYSTICK" );
         if ( !isJoystick || *isJoystick == '0' ) {
-            udev_device_unref( device );
             continue;
         }
 
-        const char* path = udev_device_get_syspath( device );
+        const char* path = device.syspath();
         if ( !path ) {
-            udev_device_unref( device );
             continue;
         }
 
         if ( std::strstr( path, "virtual" ) ) {
-            udev_device_unref( device );
             continue;
         }
 
         if ( !std::strstr( path, "event" ) ) {
-            udev_device_unref( device );
             continue;
         }
 
         constexpr const char* ACTIONS[] = { "add", "online" };
-        const char* action = udev_device_get_action( device );
+        const char* action = device.action();
         bool isNew = false;
         for ( const char* it : ACTIONS ) {
             if ( std::strcmp( action, it ) == 0 ) {
@@ -164,14 +157,12 @@ std::list<Gamepad*> WatcherUDev::newDevices()
             }
         }
         if ( !isNew ) {
-            udev_device_unref( device );
             continue;
         }
 
         fprintf( stdout, "new device detected as %s\n", action );
-        const char* devPath = udev_device_get_devnode( device );
+        const char* devPath = device.devnode();
         if ( !devPath ) {
-            udev_device_unref( device );
             continue;
         }
 
