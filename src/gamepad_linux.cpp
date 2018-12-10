@@ -41,6 +41,7 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
 , m_fd( -1 )
 , m_vidpid( 0 )
 {
+    fprintf( stderr, "opening device %s\n", a_devPath );
     assert( a_devPath );
     m_fd = ::open( a_devPath, O_RDONLY | O_NONBLOCK );
     if ( m_fd < 0 ) {
@@ -60,6 +61,7 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
 
 GamepadLinux::~GamepadLinux()
 {
+    fprintf( stdout, "disconnected %p : %08X\n", this, m_vidpid );
     if ( m_fd >= 0 ) {
         ::close( m_fd );
     }
@@ -101,18 +103,24 @@ static bool getEvent( int* fd, struct input_event* ev )
     switch ( e ) {
         default: // device lost
             fprintf( stderr, "Unhandled errno %d\n", e );
+            [[fallthrough]];
+
+        case ENODEV:
             ::close( *fd );
             *fd = -1;
             [[fallthrough]];
+
         case EAGAIN:
             return false;
+
         case 0:
             // all ok
             break;
     }
 
-    assert( ret == sizeof( struct input_event ) );
-    return true;
+    const bool readOK = ret == sizeof( struct input_event );
+    assert( readOK );
+    return readOK;
 }
 
 static void convertEvent( const MapTable* entry, const struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
@@ -178,6 +186,10 @@ static bool isBlacklistEvent( const struct input_event& ev )
 std::list<Gamepad::Event> GamepadLinux::pollChanges()
 {
     if ( !m_mapTable ) {
+        return {};
+    }
+
+    if ( m_fd <= 0 ) {
         return {};
     }
 
