@@ -99,17 +99,18 @@ static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Bindin
 
 int GGPAD::exec()
 {
-    std::list<Gamepad*> list = m_deviceWatcher->newDevices();
-    if ( list.empty() ) {
-        return 0;
-    }
-
+    std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
         pushNewBinding( it, &m_list );
     }
 
     while ( m_isRunning ) {
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+        list = m_deviceWatcher->newDevices();
+        for ( Gamepad* it : list ) {
+            pushNewBinding( it, &m_list );
+        }
+
         m_list.remove_if( Binding::isInvalid );
     }
 

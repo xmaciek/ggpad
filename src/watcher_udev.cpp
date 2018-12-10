@@ -19,6 +19,8 @@
 #include <memory>
 #include <cstring>
 
+#include <poll.h>
+
 #include "gamepad_linux.hpp"
 
 WatcherUDev::WatcherUDev()
@@ -70,7 +72,7 @@ WatcherUDev::~WatcherUDev()
     }
 }
 
-std::list<Gamepad*> WatcherUDev::newDevices()
+std::list<Gamepad*> WatcherUDev::currentDevices()
 {
     std::list<Gamepad*> list;
     int errnum = udev_enumerate_scan_devices( m_udevEnumeratePtr );
@@ -81,11 +83,6 @@ std::list<Gamepad*> WatcherUDev::newDevices()
     for ( devListEntry = allDevices; devListEntry; devListEntry = udev_list_entry_get_next( devListEntry ) ) {
         const char* path = udev_list_entry_get_name( devListEntry );
         if ( !path ) {
-            continue;
-        }
-
-        const std::size_t pathHash = m_hash( path );
-        if ( std::binary_search( m_knownDevices.cbegin(), m_knownDevices.cend(), pathHash ) ) {
             continue;
         }
 
@@ -101,19 +98,84 @@ std::list<Gamepad*> WatcherUDev::newDevices()
             udev_device_unref( device );
             continue;
         }
+
         if ( std::strstr( path, "virtual" ) ) {
             udev_device_unref( device );
             continue;
         }
+
         if ( !std::strstr( path, "event" ) ) {
             udev_device_unref( device );
             continue;
         }
 
-        m_knownDevices.push_back( pathHash );
-        std::sort( m_knownDevices.begin(), m_knownDevices.end() );
         list.push_back( new GamepadLinux( devPath ) );
     }
 
+    return list;
+}
+
+static bool waitForEvent( int fd )
+{
+    struct pollfd p;
+    p.fd = fd;
+    p.events = POLLIN;
+    return ::poll( &p, 1, 10 ) > 0;
+}
+
+std::list<Gamepad*> WatcherUDev::newDevices()
+{
+    std::list<Gamepad*> list;
+    while ( waitForEvent( udev_monitor_get_fd( m_udevMonitorPtr ) ) ) {
+        struct udev_device* device = udev_monitor_receive_device( m_udevMonitorPtr );
+        if ( !device ) {
+            continue;
+        }
+
+        const char* isJoystick = udev_device_get_property_value( device, "ID_INPUT_JOYSTICK" );
+        if ( !isJoystick || *isJoystick == '0' ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        const char* path = udev_device_get_syspath( device );
+        if ( !path ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        if ( std::strstr( path, "virtual" ) ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        if ( !std::strstr( path, "event" ) ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        constexpr const char* ACTIONS[] = { "add", "online" };
+        const char* action = udev_device_get_action( device );
+        bool isNew = false;
+        for ( const char* it : ACTIONS ) {
+            if ( std::strcmp( action, it ) == 0 ) {
+                isNew = true;
+                break;
+            }
+        }
+        if ( !isNew ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        fprintf( stdout, "new device detected as %s\n", action );
+        const char* devPath = udev_device_get_devnode( device );
+        if ( !devPath ) {
+            udev_device_unref( device );
+            continue;
+        }
+
+        list.push_back( new GamepadLinux( devPath ) );
+    }
     return list;
 }

@@ -27,5 +27,6 @@ public:
     Watcher() = default;
     virtual ~Watcher() = default;
 
+    virtual std::list<Gamepad*> currentDevices() = 0;
     virtual std::list<Gamepad*> newDevices() = 0;
 };
