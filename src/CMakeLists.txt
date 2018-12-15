@@ -16,6 +16,7 @@ set( SOURCES
     gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
     gamepad_linux.cpp
     ggpad.cpp
+    idcounter.cpp
     lua_script.cpp
     lua_script_function.cpp
     main.cpp

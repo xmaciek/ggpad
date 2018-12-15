@@ -30,12 +30,16 @@ public:
 private:
     int m_fd;
     uint32_t m_vidpid;
+    uint64_t m_uid;
     state_type m_state;
     const MapTable* m_mapTable;
 
 public:
     GamepadLinux( const char* a_devPath );
     virtual ~GamepadLinux();
+
+    virtual uint32_t vidpid() const override;
+    virtual uint64_t uid() const override;
 
     virtual bool isConnected() const override;
     virtual std::list<Gamepad::Event> pollChanges() override;

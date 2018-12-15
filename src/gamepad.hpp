@@ -20,7 +20,6 @@
 #include <list>
 
 #include "macros.hpp"
-#include "lua_script.hpp"
 
 class Gamepad {
     DISABLE_COPY( Gamepad )
@@ -49,6 +48,9 @@ public:
 
     Gamepad() = default;
     virtual ~Gamepad() = default;
+
+    virtual uint32_t vidpid() const = 0;
+    virtual uint64_t uid() const = 0;
 
     virtual bool isConnected() const = 0;
     virtual std::list<Event> pollChanges() = 0;

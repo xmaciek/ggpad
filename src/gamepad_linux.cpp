@@ -25,6 +25,8 @@
 #include <unistd.h>
 #include <linux/input.h>
 
+#include "idcounter.hpp"
+
 extern const MapTable* GamepadDefault;
 extern const MapTable* xboxOneSBluetooth_0x045E02FD;
 
@@ -55,7 +57,8 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
     m_vidpid = id.vendor;
     m_vidpid <<= 16;
     m_vidpid |= id.product;
-    fprintf( stdout, "%p : %08X\n", this, m_vidpid );
+    m_uid = g_idCounter.create( m_vidpid );
+    fprintf( stdout, "%p : %08X : %016X\n", this, m_vidpid, m_uid );
     m_mapTable = driverFixForVidPid( m_vidpid );
 }
 
@@ -65,6 +68,17 @@ GamepadLinux::~GamepadLinux()
     if ( m_fd >= 0 ) {
         ::close( m_fd );
     }
+    g_idCounter.release( m_uid );
+}
+
+uint32_t GamepadLinux::vidpid() const
+{
+    return m_vidpid;
+}
+
+uint64_t GamepadLinux::uid() const
+{
+    return m_uid;
 }
 
 static bool waitForEvent( int* fd )
