@@ -89,7 +89,7 @@ static bool waitForEvent( int* fd )
     struct pollfd p;
     p.fd = *fd;
     p.events = POLLIN;
-    const int ret = poll( &p, 1, 10 );
+    const int ret = poll( &p, 1, 40 );
 
     // device lost
     if ( ret < 0 ) {
@@ -108,33 +108,22 @@ static bool getEvent( int* fd, struct input_event* ev )
     assert( *fd > 0 );
     assert( ev );
 
-    if ( !waitForEvent( fd ) ) {
-        return false;
-    }
-
     const int ret = ::read( *fd, ev, sizeof( struct input_event ) );
     const int e = errno;
     switch ( e ) {
-        default: // device lost
+        default:
             fprintf( stderr, "Unhandled errno %d\n", e );
             [[fallthrough]];
 
-        case ENODEV:
+        case ENODEV: // device lost
             ::close( *fd );
             *fd = -1;
-            [[fallthrough]];
-
-        case EAGAIN:
             return false;
 
         case 0:
-            // all ok
-            break;
+        case EAGAIN:
+            return ret == sizeof( struct input_event );;
     }
-
-    const bool readOK = ret == sizeof( struct input_event );
-    assert( readOK );
-    return readOK;
 }
 
 static void convertEvent( const MapTable* entry, const struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
@@ -204,6 +193,10 @@ std::list<Gamepad::Event> GamepadLinux::pollChanges()
     }
 
     if ( m_fd <= 0 ) {
+        return {};
+    }
+
+    if ( !waitForEvent( &m_fd ) ) {
         return {};
     }
 
