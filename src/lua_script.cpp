@@ -70,3 +70,30 @@ LuaScript::Function LuaScript::call( const char* a_funcName )
     return LuaScript::Function( m_vm.get(), a_funcName );
 }
 
+static LuaScript::Variant getFromStack( lua_State* vm, int idx )
+{
+    switch ( lua_type( vm, idx ) ) {
+        case LUA_TNUMBER:
+            return LuaScript::Variant( lua_tonumber( vm, idx ) );
+        case LUA_TSTRING:
+            return LuaScript::Variant( lua_tostring( vm, idx ) );
+        default:
+            return LuaScript::Variant();
+    }
+}
+
+std::vector<LuaScript::Pair> LuaScript::getTable( const char* name )
+{
+    std::vector<LuaScript::Pair> v;
+    lua_getglobal( m_vm.get(), name );
+    if ( !lua_istable( m_vm.get(), -1 ) ) {
+        return v;
+    }
+
+    lua_pushnil( m_vm.get() );
+    while ( lua_next( m_vm.get(), -2 ) ) {
+        v.push_back( { getFromStack( m_vm.get(), -2 ), getFromStack( m_vm.get(), -1 ) } );
+        lua_pop( m_vm.get(), 1 );
+    }
+    return v;
+}

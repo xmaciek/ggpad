@@ -12,6 +12,7 @@ endif()
 
 set( SOURCES
     binding.cpp
+    config.cpp
     gamepad_linux_default.cpp
     gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
     gamepad_linux.cpp
@@ -29,13 +30,14 @@ set( LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${LIBUDEV_LIBRARIES}
     ${LUA_LIBRARIES}
+    "stdc++fs"
 )
 
 set( INCLUDES
     ${LUA_INCLUDE_DIR}
 )
 
-set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_STANDARD 17 )
 add_executable( ${BINNAME} ${SOURCES} )
 target_link_libraries( ${BINNAME} ${LIBRARIES} )
 target_include_directories( ${BINNAME} PUBLIC ${INCLUDES} )

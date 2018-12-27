@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "binding.hpp"
+#include "config.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
 #include "systemevent.hpp"
@@ -35,6 +36,7 @@ public:
 
 private:
     static GGPAD* s_instance;
+    Config m_config;
 
     bool m_isRunning;
 

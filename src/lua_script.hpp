@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "macros.hpp"
@@ -49,6 +50,9 @@ public:
 #undef ARGUMENT
     };
 
+    using Variant = std::variant<std::string,int64_t>;
+    using Pair = std::pair<Variant,Variant>;
+
     typedef struct {
         const char* name;
         int value;
@@ -58,12 +62,11 @@ public:
 
     struct lua_State* vm();
     void doFile( const char* a_fileName );
+
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
+    std::vector<Pair> getTable( const char* a_name );
 
     bool hasFunction( const char* a_funcName );
     Function call( const char* a_funcName );
 
 };
-
-
-
