@@ -14,6 +14,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include <chrono>
+#include <filesystem>
 #include <thread>
 
 #include "lua.hpp"
@@ -69,10 +70,14 @@ GGPAD::~GGPAD()
     }
 }
 
-static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Binding>>* a_bindList )
+static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Binding>>* a_bindList, const std::string& a_scriptFile )
 {
     a_bindList->push_back( std::make_unique<Binding>() );
     a_bindList->back()->m_gamepad = a_gamepad;
+    if ( !std::filesystem::exists( a_scriptFile ) ) {
+        return;
+    }
+
     a_bindList->back()->m_script = new LuaScript();
     LuaScript& script = *a_bindList->back()->m_script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
@@ -88,7 +93,7 @@ static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Bindin
         lua_register( script.vm(), it.name, it.func );
     }
 
-    script.doFile( "test1.lua" );
+    script.doFile( a_scriptFile.c_str() );
 
     a_bindList->back()->m_hasUpdate = script.hasFunction( "GGPAD_update" );
     a_bindList->back()->m_hasEvent = script.hasFunction( "GGPAD_event" );
@@ -101,14 +106,14 @@ int GGPAD::exec()
 {
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
-        pushNewBinding( it, &m_list );
+        pushNewBinding( it, &m_list, m_config[ it->uid() ] );
     }
 
     while ( m_isRunning ) {
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
-            pushNewBinding( it, &m_list );
+            pushNewBinding( it, &m_list, m_config[ it->uid() ] );
         }
 
         m_list.remove_if( Binding::isInvalid );
