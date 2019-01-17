@@ -17,7 +17,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <cstdio>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -26,6 +25,7 @@
 #include <linux/input.h>
 
 #include "idcounter.hpp"
+#include "log.hpp"
 
 extern const MapTable* GamepadDefault;
 extern const MapTable* xboxOneSBluetooth_0x045E02FD;
@@ -43,10 +43,11 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
 , m_fd( -1 )
 , m_vidpid( 0 )
 {
-    fprintf( stderr, "opening device %s\n", a_devPath );
+    LOG( LOG_DEBUG, "opening device %s\n", a_devPath );
     assert( a_devPath );
     m_fd = ::open( a_devPath, O_RDONLY | O_NONBLOCK );
     if ( m_fd < 0 ) {
+        LOG( LOG_ERROR, "unable to open device path\n" );
         assert( !"unable to open device path" );
         return;
     }
@@ -58,13 +59,13 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
     m_vidpid <<= 16;
     m_vidpid |= id.product;
     m_uid = g_idCounter.create( m_vidpid );
-    fprintf( stdout, "%p : %08X : %016X\n", this, m_vidpid, m_uid );
+    LOG( LOG_DEBUG, "Found device : %08X : %016X\n", this, m_vidpid, m_uid );
     m_mapTable = driverFixForVidPid( m_vidpid );
 }
 
 GamepadLinux::~GamepadLinux()
 {
-    fprintf( stdout, "disconnected %p : %08X\n", this, m_vidpid );
+    LOG( LOG_DEBUG, "Disconnected device %p : %016X\n", this, m_vidpid );
     if ( m_fd >= 0 ) {
         ::close( m_fd );
     }
@@ -112,7 +113,7 @@ static bool getEvent( int* fd, struct input_event* ev )
     const int e = errno;
     switch ( e ) {
         default:
-            fprintf( stderr, "Unhandled errno %d\n", e );
+            LOG( LOG_ERROR, "Unhandled errno %d\n", e );
             [[fallthrough]];
 
         case ENODEV: // device lost

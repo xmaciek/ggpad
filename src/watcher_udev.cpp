@@ -22,6 +22,7 @@
 #include <poll.h>
 
 #include "gamepad_linux.hpp"
+#include "log.hpp"
 #include "wrap_udev.hpp"
 
 WatcherUDev::WatcherUDev()
@@ -160,7 +161,7 @@ std::list<Gamepad*> WatcherUDev::newDevices()
             continue;
         }
 
-        fprintf( stdout, "new device detected as %s\n", action );
+        LOG( LOG_DEBUG, "New device detected as %s\n", action );
         const char* devPath = device.devnode();
         if ( !devPath ) {
             continue;

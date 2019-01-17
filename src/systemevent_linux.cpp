@@ -13,9 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include "systemevent_linux.hpp"
+
 #include <cassert>
 #include <cstring>
-#include <iostream>
 #include <mutex>
 
 #include <fcntl.h>
@@ -23,7 +24,7 @@
 #include <linux/uinput.h>
 #include <unistd.h>
 
-#include "systemevent_linux.hpp"
+#include "log.hpp"
 
 static bool enableInputCodes( int32_t uinput )
 {
@@ -62,23 +63,23 @@ SystemEventLinux::SystemEventLinux()
 : SystemEvent()
 , m_uinput( 0 )
 {
-    std::cout << "Initializing uinput... " << std::flush;
+    LOG( LOG_DEBUG, "Initializing uinput... " );
     m_uinput = ::open( "/dev/uinput", O_WRONLY | O_NONBLOCK );
-    uint64_t e = errno;
+    int e = errno;
     if ( m_uinput < 1 ) {
-        std::cout << "/dev/uintput : " << ::strerror( e ) << std::endl;
+        LOG( LOG_ERROR, "/dev/uintput %s\n", ::strerror( e ) );
         return;
     } else {
-        std::cout << "OK" << std::endl;
+        LOG( LOG_DEBUG, "OK\n" );
     }
 
-    std::cout << "Enabling input codes... " << std::flush;
+    LOG( LOG_DEBUG, "Enabling input codes... " );
     if ( !enableInputCodes( m_uinput ) ) {
         e = errno;
-        std::cout << "Fail: " << ::strerror( e ) << std::endl;
+        LOG( LOG_ERROR, "Fail: %s\n", ::strerror( e ) );
         return;
     } else {
-        std::cout << "OK" << std::endl;
+        LOG( LOG_DEBUG, "OK\n" );
     }
 
     ::memset( &m_virtualDevice, 0, sizeof( struct uinput_user_dev ) );
@@ -87,13 +88,13 @@ SystemEventLinux::SystemEventLinux()
     m_virtualDevice.id.vendor  = 0x1234;
     m_virtualDevice.id.product = 0xfedc;
     m_virtualDevice.id.version = 1;
-    std::cout << "Creating virtual device... " << std::flush;
+    LOG( LOG_DEBUG, "Creating virtual device... " );
     if ( !createDevice( m_uinput, &m_virtualDevice ) ) {
         e = errno;
-        std::cout << "Fail: " << ::strerror( e ) << std::endl;
+        LOG( LOG_ERROR, "Fail: %s\n", ::strerror( e ) );
         return;
     } else {
-        std::cout << "OK" << std::endl;
+        LOG( LOG_DEBUG, "OK\n" );
     }
 
     ::memset( &m_flush, 0, sizeof( struct input_event ) );
