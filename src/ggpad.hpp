@@ -31,8 +31,6 @@ class GGPAD {
 
 public:
     using BindList = std::list<std::unique_ptr<Binding>>;
-    using KbdFunc = void( uint32_t, bool );
-    using MouseFunc = void( uint32_t, int32_t );
 
 private:
     static GGPAD* s_instance;

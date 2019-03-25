@@ -17,11 +17,8 @@
 #include <filesystem>
 #include <thread>
 
-#include "lua.hpp"
-
 #include "ggpad.hpp"
 #include "gamepad.hpp"
-#include "lua_binder.hpp"
 #include "watcher_udev.hpp"
 #include "systemevent_linux.hpp"
 
@@ -84,14 +81,8 @@ static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Bindin
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
 
-    typedef struct { const char* name; lua_CFunction func; } CB_REG;
-    constexpr static const CB_REG CALLBACK_TABLE[] = {
-        { "GGPAD_keyboardSet", &LuaBinder::facade<GGPAD::KbdFunc*,&GGPAD::setKeyboard, int, bool> }
-        , { "GGPAD_mouseMove", &LuaBinder::facade<GGPAD::MouseFunc*,&GGPAD::mouseMove, int, int> }
-    };
-    for ( const CB_REG& it : CALLBACK_TABLE ) {
-        lua_register( script.vm(), it.name, it.func );
-    }
+    script.registerFunction( "GGPAD_keyboardSet", &LuaScript::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
+    script.registerFunction( "GGPAD_mouseMove",   &LuaScript::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
 
     script.doFile( a_scriptFile.c_str() );
 

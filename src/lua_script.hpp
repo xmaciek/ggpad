@@ -27,8 +27,17 @@ struct lua_State;
 class LuaScript {
     DISABLE_COPY( LuaScript )
 
+public:
+    using vm_type = struct lua_State;
+    using callback_type = int(*)(vm_type*);
+
 private:
-    std::unique_ptr<struct lua_State, void(*)(struct lua_State*)> m_vm;
+    std::unique_ptr<vm_type, void(*)(vm_type*)> m_vm;
+
+    static int stackCount( vm_type* );
+
+    template <typename T>
+    static T get( vm_type*, std::size_t );
 
 public:
     class Function {
@@ -36,9 +45,9 @@ public:
 
     private:
         friend LuaScript;
-        struct lua_State* m_vm;
+        vm_type* m_vm;
         int m_argc;
-        Function( struct lua_State* a_vm, const char* a_funcName );
+        Function( vm_type* a_vm, const char* a_funcName );
 
     public:
         Function( Function&& );
@@ -60,7 +69,6 @@ public:
 
     LuaScript();
 
-    struct lua_State* vm();
     void doFile( const char* a_fileName );
 
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
@@ -69,4 +77,18 @@ public:
     bool hasFunction( const char* a_funcName );
     Function call( const char* a_funcName );
 
+    void registerFunction( const char*, callback_type );
+
+    template <typename FUNC_TYPE, FUNC_TYPE FUNC, typename ARG0, typename ARG1>
+    static int facade( vm_type* vm )
+    {
+        if ( LuaScript::stackCount( vm ) != 2 ) {
+            return 0;
+        }
+        (*FUNC)(
+            LuaScript::get<ARG0>( vm, 1 ),
+            LuaScript::get<ARG1>( vm, 2 )
+        );
+        return 1;
+    }
 };

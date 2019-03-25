@@ -34,11 +34,6 @@ LuaScript::LuaScript()
     luaL_openlibs( m_vm.get() );
 }
 
-struct lua_State* LuaScript::vm()
-{
-    return m_vm.get();
-}
-
 void LuaScript::bindTable( const char* a_name, const std::vector<LuaScript::Record>& a_table )
 {
     assert( m_vm );
@@ -70,7 +65,7 @@ LuaScript::Function LuaScript::call( const char* a_funcName )
     return LuaScript::Function( m_vm.get(), a_funcName );
 }
 
-static LuaScript::Variant getFromStack( lua_State* vm, int idx )
+static LuaScript::Variant getFromStack( LuaScript::vm_type* vm, int idx )
 {
     switch ( lua_type( vm, idx ) ) {
         case LUA_TNUMBER:
@@ -96,4 +91,26 @@ std::vector<LuaScript::Pair> LuaScript::getTable( const char* name )
         lua_pop( m_vm.get(), 1 );
     }
     return v;
+}
+
+void LuaScript::registerFunction( const char* name, callback_type cb )
+{
+    lua_register( m_vm.get(), name, cb );
+}
+
+int LuaScript::stackCount( vm_type* vm )
+{
+    return lua_gettop( vm );
+}
+
+template<>
+int LuaScript::get<int>( vm_type* vm, std::size_t n )
+{
+    return lua_tointeger( vm, n );
+}
+
+template <>
+bool LuaScript::get<bool>( vm_type* vm, std::size_t n )
+{
+    return !!lua_tointeger( vm, n );
 }
