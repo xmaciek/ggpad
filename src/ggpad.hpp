@@ -22,6 +22,7 @@
 
 #include "binding.hpp"
 #include "config.hpp"
+#include "gui.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
 #include "systemevent.hpp"
@@ -42,6 +43,7 @@ private:
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
+    std::unique_ptr<Gui> m_gui;
 
 public:
     GGPAD();
@@ -50,5 +52,6 @@ public:
     static void setKeyboard( uint32_t, bool );
     static void mouseMove( uint32_t a_axis, int32_t a_delta );
 
+    void quit();
     int exec();
 };

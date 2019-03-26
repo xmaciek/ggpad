@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2019 Maciej Latocha
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,19 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <QApplication>
-#include "ggpad.hpp"
+#include "gui.hpp"
 
-int main( int argc, char** argv )
+Gui::Gui()
 {
-    QApplication app( argc, argv );
-    GGPAD ggpad;
-    std::thread ex( &GGPAD::exec, &ggpad );
-
-    QObject::connect( &app, &QApplication::aboutToQuit, [&](){ ggpad.quit(); } );
-
-    const int ret = app.exec();
-    ex.join();
-    return ret;
+    resize( 720, 480 );
+    show();
 }
-

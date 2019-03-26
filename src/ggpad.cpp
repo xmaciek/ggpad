@@ -56,6 +56,7 @@ GGPAD::GGPAD()
     }
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_systemEvent = std::make_unique<SystemEventLinux>();
+    m_gui = std::make_unique<Gui>();
 }
 
 GGPAD::~GGPAD()
@@ -91,6 +92,11 @@ static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Bindin
     a_bindList->back()->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
 
     a_bindList->back()->run();
+}
+
+void GGPAD::quit()
+{
+    m_isRunning = false;
 }
 
 int GGPAD::exec()

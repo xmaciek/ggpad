@@ -4,6 +4,7 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 find_package( Threads REQUIRED )
 find_package( Lua REQUIRED )
 find_package( PkgConfig REQUIRED )
+find_package( Qt5Widgets REQUIRED )
 
 pkg_check_modules( LIBUDEV libudev )
 if( !LIBUDEV_FOUND )
@@ -17,6 +18,7 @@ set( SOURCES
     gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
     gamepad_linux.cpp
     ggpad.cpp
+    gui.cpp
     idcounter.cpp
     lua_script.cpp
     lua_script_function.cpp
@@ -26,10 +28,17 @@ set( SOURCES
     watcher_udev.cpp
 )
 
+set( QHEADERS
+    gui.hpp
+)
+
+qt5_wrap_cpp( MOCABLES ${QHEADERS} )
+
 set( LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${LIBUDEV_LIBRARIES}
     ${LUA_LIBRARIES}
+    Qt5::Widgets
     "stdc++fs"
 )
 
@@ -38,6 +47,6 @@ set( INCLUDES
 )
 
 set( CMAKE_CXX_STANDARD 17 )
-add_executable( ${BINNAME} ${SOURCES} )
+add_executable( ${BINNAME} ${SOURCES} ${MOCABLES} )
 target_link_libraries( ${BINNAME} ${LIBRARIES} )
 target_include_directories( ${BINNAME} PUBLIC ${INCLUDES} )
