@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2019 Maciej Latocha
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,21 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <QApplication>
-#include "ggpad.hpp"
+#pragma once
 
-int main( int argc, char** argv )
-{
-    QApplication app( argc, argv );
-    app.setStyle( "fusion" );
+#include <QAbstractListModel>
 
-    GGPAD ggpad;
-    std::thread ex( &GGPAD::exec, &ggpad );
+class ControllerModel : public QAbstractListModel {
+    Q_OBJECT
 
-    QObject::connect( &app, &QApplication::aboutToQuit, [&](){ ggpad.quit(); } );
-
-    const int ret = app.exec();
-    ex.join();
-    return ret;
-}
-
+public:
+    virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
+    virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+};

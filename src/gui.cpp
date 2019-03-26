@@ -15,8 +15,22 @@
 
 #include "gui.hpp"
 
+#include <QFontDatabase>
+#include <QSplitter>
+
+#include "gui_controller_model.hpp"
+
 Gui::Gui()
+: QMainWindow( 0 )
+, m_list( this )
+, m_scriptText( this )
 {
+    QSplitter* splitterMain = new QSplitter( this );
+    setCentralWidget( splitterMain );
+    splitterMain->addWidget( &m_list );
+    splitterMain->addWidget( &m_scriptText );
+    m_list.setModel( new ControllerModel() );
+    m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
     resize( 720, 480 );
     show();
 }

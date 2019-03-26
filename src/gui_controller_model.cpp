@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2019 Maciej Latocha
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,21 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <QApplication>
-#include "ggpad.hpp"
+#include "gui_controller_model.hpp"
 
-int main( int argc, char** argv )
+#include <QIcon>
+
+int ControllerModel::rowCount( const QModelIndex& parent ) const
 {
-    QApplication app( argc, argv );
-    app.setStyle( "fusion" );
-
-    GGPAD ggpad;
-    std::thread ex( &GGPAD::exec, &ggpad );
-
-    QObject::connect( &app, &QApplication::aboutToQuit, [&](){ ggpad.quit(); } );
-
-    const int ret = app.exec();
-    ex.join();
-    return ret;
+    return 2;
 }
 
+QVariant ControllerModel::data( const QModelIndex& index, int role ) const
+{
+    switch ( role ) {
+        case Qt::DisplayRole:
+            switch ( index.row() ) {
+                case 0: return "XBox One S (Wireless)";
+                case 1: return "DualShock 4 (Wireless)";
+                default: return QVariant();
+            }
+        case Qt::DecorationRole:
+            return QIcon::fromTheme( "input-gaming" );
+        default:
+            return QVariant();
+    }
+}

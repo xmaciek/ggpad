@@ -16,9 +16,17 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QListView>
+#include <QTextEdit>
 
 class Gui : public QMainWindow {
     Q_OBJECT
+
+private:
+    QListView m_list;
+    QTextEdit m_scriptText;
+
 public:
     Gui();
+
 };

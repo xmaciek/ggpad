@@ -19,6 +19,7 @@ set( SOURCES
     gamepad_linux.cpp
     ggpad.cpp
     gui.cpp
+    gui_controller_model.cpp
     idcounter.cpp
     lua_script.cpp
     lua_script_function.cpp
@@ -30,6 +31,7 @@ set( SOURCES
 
 set( QHEADERS
     gui.hpp
+    gui_controller_model.hpp
 )
 
 qt5_wrap_cpp( MOCABLES ${QHEADERS} )
