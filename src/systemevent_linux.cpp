@@ -117,7 +117,7 @@ void SystemEventLinux::sendEvent( uint32_t type, uint32_t code, int32_t value )
     event.code = code;
     event.value = value;
     ::gettimeofday( &event.time, 0 );
-    const auto written = ::write( m_uinput, &event, sizeof( struct input_event ) );
+    const int written = ::write( m_uinput, &event, sizeof( struct input_event ) );
     assert( written == sizeof( struct input_event ) );
 
     ::gettimeofday( &m_flush.time, 0 );
