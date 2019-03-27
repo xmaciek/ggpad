@@ -16,6 +16,7 @@
 #include "gamepad_linux.hpp"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 #include <errno.h>
@@ -27,10 +28,10 @@
 #include "idcounter.hpp"
 #include "log.hpp"
 
-extern const MapTable* GamepadDefault;
-extern const MapTable* xboxOneSBluetooth_0x045E02FD;
+extern const TableInfo GamepadDefault;
+extern const TableInfo xboxOneSBluetooth_0x045E02FD;
 
-static const MapTable* driverFixForVidPid( uint32_t vidpid )
+static TableInfo driverFixForVidPid( uint32_t vidpid )
 {
     switch ( vidpid ) {
         case 0x045E02FD: return xboxOneSBluetooth_0x045E02FD;
@@ -60,7 +61,7 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
     m_vidpid |= id.product;
     m_uid = g_idCounter.create( m_vidpid );
     LOG( LOG_DEBUG, "Found device : %08X : %016X\n", this, m_vidpid, m_uid );
-    m_mapTable = driverFixForVidPid( m_vidpid );
+    m_tableInfo = driverFixForVidPid( m_vidpid );
 }
 
 GamepadLinux::~GamepadLinux()
@@ -127,9 +128,15 @@ static bool getEvent( int* fd, struct input_event* ev )
     }
 }
 
-static void convertEvent( const MapTable* entry, const struct input_event* a_evIn, Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
+template<typename T>
+int bcmp( const void* lhs, const void* rhs )
 {
-    assert( entry );
+    return T::spaceship( *reinterpret_cast<const T*>( lhs ), *reinterpret_cast<const T*>( rhs ) );
+}
+
+static void convertEvent( const TableInfo& tableInfo, const struct input_event* a_evIn,
+                          Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
+{
     assert( a_evIn );
     assert( a_evOut );
 
@@ -137,14 +144,9 @@ static void convertEvent( const MapTable* entry, const struct input_event* a_evI
     a_evOut->_code = a_evIn->code;
     a_evOut->_value = a_evIn->value;
 
-    while ( entry->type ) {
-        if ( entry->type == a_evIn->type && entry->code == a_evIn->code ) {
-            break;
-        }
-        entry++;
-    }
-
-    if ( !entry->type ) {
+    const MapTable key{ a_evIn->type, a_evIn->code };
+    const MapTable* entry = (const MapTable*)std::bsearch( &key, tableInfo.ptr, tableInfo.size, sizeof( MapTable ), &bcmp<MapTable> );
+    if ( !entry ) {
         return;
     }
 
@@ -189,7 +191,7 @@ static bool isBlacklistEvent( const struct input_event& ev )
 
 std::list<Gamepad::Event> GamepadLinux::pollChanges()
 {
-    if ( !m_mapTable ) {
+    if ( !m_tableInfo.ptr ) {
         return {};
     }
 
@@ -213,7 +215,7 @@ std::list<Gamepad::Event> GamepadLinux::pollChanges()
     std::list<Gamepad::Event> list;
     for ( const struct input_event& it : events ) {
         list.push_back( Gamepad::Event() );
-        convertEvent( m_mapTable, &it, &list.back(), m_state );
+        convertEvent( m_tableInfo, &it, &list.back(), m_state );
     };
     return list;
 }
@@ -222,3 +224,4 @@ bool GamepadLinux::isConnected() const
 {
     return m_fd > 0;
 }
+

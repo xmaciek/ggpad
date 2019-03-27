@@ -32,7 +32,7 @@ private:
     uint32_t m_vidpid;
     uint64_t m_uid;
     state_type m_state;
-    const MapTable* m_mapTable;
+    TableInfo m_tableInfo;
 
 public:
     GamepadLinux( const char* a_devPath );

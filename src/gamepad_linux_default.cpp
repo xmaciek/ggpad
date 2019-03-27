@@ -16,7 +16,7 @@
 #include <linux/input.h>
 #include "gamepad_linux.hpp"
 
-constexpr static const MapTable Ddefault[] = {
+constexpr static const MapTable unsorted[] = {
     { EV_KEY, BTN_SOUTH, 0, 1, ConversionType::Digital, Gamepad::A, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_EAST, 0, 1, ConversionType::Digital, Gamepad::B, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_NORTH, 0, 1, ConversionType::Digital, Gamepad::Y, Gamepad::unknown, 0, 1 }
@@ -35,7 +35,7 @@ constexpr static const MapTable Ddefault[] = {
     , { EV_ABS, ABS_RZ, 0, 1023, ConversionType::Analog, Gamepad::R2, Gamepad::unknown, 0, Gamepad::Event::max() }
     , { EV_ABS, ABS_HAT0X, -1, 1, ConversionType::Digital, Gamepad::LEFT, Gamepad::RIGHT, 0, 1 }
     , { EV_ABS, ABS_HAT0Y, -1, 1, ConversionType::Digital, Gamepad::UP, Gamepad::DOWN, 0, 1 }
-    , { 0 }
 };
 
-const MapTable* GamepadDefault = Ddefault;
+constexpr static const MapSort<(sizeof( unsorted ) / sizeof( MapTable ) )> sorted( unsorted );
+volatile const TableInfo GamepadDefault = sorted;
