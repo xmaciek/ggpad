@@ -22,7 +22,7 @@
 #include <fstream>
 
 #include "log.hpp"
-#include "lua_script.hpp"
+#include "script.hpp"
 
 static std::filesystem::path configDir()
 {
@@ -46,10 +46,10 @@ Config::Config()
         LOG( LOG_ERROR, "Unable to read config file %s\n", filePath.c_str() );
         return;
     }
-    LuaScript luaScript;
+    Script luaScript;
     luaScript.doFile( filePath.c_str() );
-    std::vector<LuaScript::Pair> table = luaScript.getTable( "bindings" );
-    for ( LuaScript::Pair& it : table ) {
+    std::vector<Script::Pair> table = luaScript.getTable( "bindings" );
+    for ( Script::Pair& it : table ) {
         m_gamepadsScriptFile[ std::get<int64_t>( it.first ) ] = std::get<std::string>( it.second );
         LOG( LOG_DEBUG, "Found binding for 0x%08X: %s\n", std::get<int64_t>( it.first ), std::get<std::string>( it.second ).c_str() );
     }

@@ -24,21 +24,21 @@
 #include "systemevent_linux.hpp"
 
 
-static const std::vector<LuaScript::Record> GAMEPAD_TABLE {
+static const std::vector<Script::Record> GAMEPAD_TABLE {
     { "unknown", 0 }
 #define MAKE_ENUM( NAME ) , { #NAME , Gamepad::NAME }
 #include "button_enum.def"
 #undef MAKE_ENUM
 };
 
-static const std::vector<LuaScript::Record> KEYBOARD_TABLE {
+static const std::vector<Script::Record> KEYBOARD_TABLE {
     { "unknown", 0 }
 #define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, KEY_ ## VALUE }
 #include "key_enum.def"
 #undef MAKE_ENUM
 };
 
-static const std::vector<LuaScript::Record> MOUSE_TABLE {
+static const std::vector<Script::Record> MOUSE_TABLE {
     { "unknown", 0 }
 #define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, BTN_ ## VALUE }
 #define MAKE_ENUM2( NAME, VALUE ) ,{ #NAME, REL_ ## VALUE }
@@ -78,14 +78,14 @@ static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, con
         return;
     }
 
-    a_bindList->back()->m_script = new LuaScript();
-    LuaScript& script = *a_bindList->back()->m_script;
+    a_bindList->back()->m_script = new Script();
+    Script& script = *a_bindList->back()->m_script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
 
-    script.registerFunction( "GGPAD_keyboardSet", &LuaScript::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
-    script.registerFunction( "GGPAD_mouseMove",   &LuaScript::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
+    script.registerFunction( "GGPAD_keyboardSet", &Script::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
+    script.registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
 
     script.doFile( a_scriptFile.c_str() );
 

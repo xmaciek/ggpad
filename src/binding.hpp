@@ -16,7 +16,7 @@
 #pragma once
 
 #include "gamepad.hpp"
-#include "lua_script.hpp"
+#include "script.hpp"
 #include "macros.hpp"
 
 #include <memory>
@@ -36,7 +36,7 @@ public:
     bool m_isRunning : 1;
 
     Gamepad* m_gamepad;
-    LuaScript* m_script;
+    Script* m_script;
 
     std::thread m_updateThread;
     std::thread m_eventThread;
