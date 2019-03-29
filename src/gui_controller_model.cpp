@@ -17,23 +17,39 @@
 
 #include <QIcon>
 
+ControllerModel::ControllerModel( std::mutex* mtx, std::vector<std::unique_ptr<Binding>>* binds )
+: m_mutex( mtx )
+, m_bindings( binds )
+{
+}
+
 int ControllerModel::rowCount( const QModelIndex& parent ) const
 {
-    return 2;
+    if ( !m_mutex ) {
+        return 0;
+    }
+    std::lock_guard<std::mutex> lg( *m_mutex );
+    return m_bindings ? m_bindings->size() : 0;
 }
 
 QVariant ControllerModel::data( const QModelIndex& index, int role ) const
 {
+    if ( !m_mutex ) {
+        return QVariant();
+    }
     switch ( role ) {
-        case Qt::DisplayRole:
-            switch ( index.row() ) {
-                case 0: return "XBox One S (Wireless)";
-                case 1: return "DualShock 4 (Wireless)";
-                default: return QVariant();
-            }
+        case Qt::DisplayRole: {
+            std::lock_guard<std::mutex> lg( *m_mutex );
+            return "XBox One S (Wireless)";
+        }
         case Qt::DecorationRole:
             return QIcon::fromTheme( "input-gaming" );
         default:
             return QVariant();
     }
+}
+
+void ControllerModel::refreshViews()
+{
+    emit dataChanged( QModelIndex(), QModelIndex() );
 }

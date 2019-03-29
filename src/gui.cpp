@@ -20,7 +20,7 @@
 
 #include "gui_controller_model.hpp"
 
-Gui::Gui()
+Gui::Gui( QPointer<QAbstractListModel> model )
 : QMainWindow( 0 )
 , m_list( this )
 , m_scriptText( this )
@@ -29,7 +29,7 @@ Gui::Gui()
     setCentralWidget( splitterMain );
     splitterMain->addWidget( &m_list );
     splitterMain->addWidget( &m_scriptText );
-    m_list.setModel( new ControllerModel() );
+    m_list.setModel( model );
     m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
     resize( 720, 480 );
     show();

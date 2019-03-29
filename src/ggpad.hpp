@@ -23,6 +23,7 @@
 #include "binding.hpp"
 #include "config.hpp"
 #include "gui.hpp"
+#include "gui_controller_model.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
 #include "systemevent.hpp"
@@ -31,7 +32,7 @@ class GGPAD {
     DISABLE_COPY( GGPAD );
 
 public:
-    using BindList = std::list<std::unique_ptr<Binding>>;
+    using BindList = std::vector<std::unique_ptr<Binding>>;
 
 private:
     static GGPAD* s_instance;
@@ -39,11 +40,13 @@ private:
 
     bool m_isRunning;
 
+    std::mutex m_bindingMutex;
     BindList m_list;
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
     std::unique_ptr<Gui> m_gui;
+    ControllerModel m_guiModel;
 
 public:
     GGPAD();

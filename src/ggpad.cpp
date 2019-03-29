@@ -19,6 +19,7 @@
 
 #include "ggpad.hpp"
 #include "gamepad.hpp"
+#include "gui_controller_model.hpp"
 #include "watcher_udev.hpp"
 #include "systemevent_linux.hpp"
 
@@ -50,13 +51,14 @@ GGPAD* GGPAD::s_instance = nullptr;
 
 GGPAD::GGPAD()
 : m_isRunning( true )
+, m_guiModel( &m_bindingMutex, &m_list )
 {
     if ( !s_instance ) {
         s_instance = this;
     }
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_systemEvent = std::make_unique<SystemEventLinux>();
-    m_gui = std::make_unique<Gui>();
+    m_gui = std::make_unique<Gui>( &m_guiModel );
 }
 
 GGPAD::~GGPAD()
@@ -68,7 +70,7 @@ GGPAD::~GGPAD()
     }
 }
 
-static void pushNewBinding( Gamepad* a_gamepad, std::list<std::unique_ptr<Binding>>* a_bindList, const std::string& a_scriptFile )
+static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
 {
     a_bindList->push_back( std::make_unique<Binding>() );
     a_bindList->back()->m_gamepad = a_gamepad;
@@ -101,21 +103,40 @@ void GGPAD::quit()
 
 int GGPAD::exec()
 {
+    bool dirty = false;
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
+        dirty = true;
+        std::lock_guard<std::mutex> lg( m_bindingMutex );
         pushNewBinding( it, &m_list, m_config[ it->uid() ] );
     }
 
+    if ( dirty ) {
+        m_guiModel.refreshViews();
+    }
+
     while ( m_isRunning ) {
+        dirty = false;
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
+            dirty = true;
+            std::lock_guard<std::mutex> lg( m_bindingMutex );
             pushNewBinding( it, &m_list, m_config[ it->uid() ] );
         }
 
-        m_list.remove_if( Binding::isInvalid );
+        {
+            const std::size_t size = m_list.size();
+            std::lock_guard<std::mutex> lg( m_bindingMutex );
+            std::remove_if( m_list.begin(), m_list.end(), Binding::isInvalid );
+            dirty |= size != m_list.size();
+        }
+        if ( dirty ) {
+            m_guiModel.refreshViews();
+        }
     }
 
+    std::lock_guard<std::mutex> lg( m_bindingMutex );
     m_list.clear();
 
     return 0;

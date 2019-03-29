@@ -15,8 +15,10 @@
 
 #pragma once
 
-#include <QMainWindow>
+#include <QAbstractListModel>
 #include <QListView>
+#include <QMainWindow>
+#include <QPointer>
 #include <QTextEdit>
 
 class Gui : public QMainWindow {
@@ -27,6 +29,5 @@ private:
     QTextEdit m_scriptText;
 
 public:
-    Gui();
-
+    Gui( QPointer<QAbstractListModel> );
 };

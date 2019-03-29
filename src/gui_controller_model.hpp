@@ -17,10 +17,21 @@
 
 #include <QAbstractListModel>
 
+#include <memory>
+#include <mutex>
+class Binding;
+
 class ControllerModel : public QAbstractListModel {
     Q_OBJECT
 
+    std::mutex* m_mutex;
+    std::vector<std::unique_ptr<Binding>>* m_bindings;
+
 public:
+    ControllerModel( std::mutex*, std::vector<std::unique_ptr<Binding>>* );
+
     virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+
+    void refreshViews();
 };
