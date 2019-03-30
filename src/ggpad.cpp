@@ -20,6 +20,7 @@
 #include "ggpad.hpp"
 #include "gamepad.hpp"
 #include "gui_controller_model.hpp"
+#include "log.hpp"
 #include "watcher_udev.hpp"
 #include "systemevent_linux.hpp"
 
@@ -128,10 +129,11 @@ int GGPAD::exec()
         {
             const std::size_t size = m_list.size();
             std::lock_guard<std::mutex> lg( m_bindingMutex );
-            std::remove_if( m_list.begin(), m_list.end(), Binding::isInvalid );
+            m_list.erase( std::remove_if( m_list.begin(), m_list.end(), Binding::isInvalid ), m_list.end() );
             dirty |= size != m_list.size();
         }
         if ( dirty ) {
+            LOG( LOG_DEBUG, "Changing dev listing\n" );
             m_guiModel.refreshViews();
         }
     }
