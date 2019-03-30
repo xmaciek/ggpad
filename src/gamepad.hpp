@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <limits>
 #include <list>
+#include <string>
 
 #include "macros.hpp"
 
@@ -54,4 +55,6 @@ public:
 
     virtual bool isConnected() const = 0;
     virtual std::list<Event> pollChanges() = 0;
+
+    virtual std::string displayName() const = 0;
 };

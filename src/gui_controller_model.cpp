@@ -15,6 +15,8 @@
 
 #include "gui_controller_model.hpp"
 
+#include "binding.hpp"
+
 #include <QIcon>
 
 ControllerModel::ControllerModel( std::mutex* mtx, std::vector<std::unique_ptr<Binding>>* binds )
@@ -40,7 +42,7 @@ QVariant ControllerModel::data( const QModelIndex& index, int role ) const
     switch ( role ) {
         case Qt::DisplayRole: {
             std::lock_guard<std::mutex> lg( *m_mutex );
-            return "XBox One S (Wireless)";
+            return m_bindings->at( index.row() )->m_gamepad->displayName().c_str();
         }
         case Qt::DecorationRole:
             return QIcon::fromTheme( "input-gaming" );

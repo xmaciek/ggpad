@@ -33,6 +33,7 @@ private:
     uint64_t m_uid;
     state_type m_state;
     TableInfo m_tableInfo;
+    std::string m_displayName;
 
 public:
     GamepadLinux( const char* a_devPath );
@@ -43,4 +44,5 @@ public:
 
     virtual bool isConnected() const override;
     virtual std::list<Gamepad::Event> pollChanges() override;
+    virtual std::string displayName() const override;
 };

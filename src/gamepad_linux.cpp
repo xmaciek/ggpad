@@ -62,6 +62,10 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
     m_uid = g_idCounter.create( m_vidpid );
     LOG( LOG_DEBUG, "Found device : %08X : %016X\n", this, m_vidpid, m_uid );
     m_tableInfo = driverFixForVidPid( m_vidpid );
+
+    char name[ 256 ] = { 0 };
+    ioctl( m_fd, EVIOCGNAME( sizeof( name ) ), name );
+    m_displayName = name;
 }
 
 GamepadLinux::~GamepadLinux()
@@ -124,7 +128,7 @@ static bool getEvent( int* fd, struct input_event* ev )
 
         case 0:
         case EAGAIN:
-            return ret == sizeof( struct input_event );;
+            return ret == sizeof( struct input_event );
     }
 }
 
@@ -191,9 +195,7 @@ static bool isBlacklistEvent( const struct input_event& ev )
 
 std::list<Gamepad::Event> GamepadLinux::pollChanges()
 {
-    if ( !m_tableInfo.ptr ) {
-        return {};
-    }
+    assert( m_tableInfo.ptr );
 
     if ( m_fd <= 0 ) {
         return {};
@@ -225,3 +227,7 @@ bool GamepadLinux::isConnected() const
     return m_fd > 0;
 }
 
+std::string GamepadLinux::displayName() const
+{
+    return m_displayName;
+}
