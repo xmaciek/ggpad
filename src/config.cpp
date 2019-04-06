@@ -49,6 +49,7 @@ Config::Config()
     Script luaScript;
     luaScript.doFile( filePath.c_str() );
     std::vector<Script::Pair> table = luaScript.getTable( "bindings" );
+    LOG( LOG_DEBUG, "Number of bindings: %d\n", table.size() );
     for ( Script::Pair& it : table ) {
         m_gamepadsScriptFile[ std::get<int64_t>( it.first ) ] = std::get<std::string>( it.second );
         LOG( LOG_DEBUG, "Found binding for 0x%08X: %s\n", std::get<int64_t>( it.first ), std::get<std::string>( it.second ).c_str() );

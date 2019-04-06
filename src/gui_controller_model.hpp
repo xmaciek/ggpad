@@ -16,6 +16,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QString>
 
 #include <memory>
 #include <mutex>
@@ -33,5 +34,9 @@ public:
     virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
 
+    void selectionChanged( const QModelIndex& );
     void refreshViews();
+
+signals:
+    void emitText( const QString& );
 };

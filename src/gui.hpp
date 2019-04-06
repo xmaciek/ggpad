@@ -21,6 +21,8 @@
 #include <QPointer>
 #include <QTextEdit>
 
+#include "gui_controller_model.hpp"
+
 class Gui : public QMainWindow {
     Q_OBJECT
 
@@ -29,5 +31,5 @@ private:
     QTextEdit m_scriptText;
 
 public:
-    Gui( QPointer<QAbstractListModel> );
+    Gui( ControllerModel* );
 };

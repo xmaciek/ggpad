@@ -15,6 +15,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
 
 #include "lua_script.hpp"
 #include "lua.hpp" // see CMake Lua convention
@@ -48,7 +49,19 @@ void LuaScript::bindTable( const char* a_name, const std::vector<LuaScript::Reco
 void LuaScript::doFile( const char* a_fileName )
 {
     assert( m_vm );
-    luaL_dofile( m_vm.get(), a_fileName );
+    std::ifstream ifs( a_fileName, std::ios::binary | std::ios::ate );
+    assert( ifs.is_open() );
+    m_text.resize( (std::size_t)ifs.tellg() + 1 );
+    ifs.seekg( 0 );
+    ifs.read( m_text.data(), m_text.size() );
+    ifs.close();
+    m_text.back() = 0;
+    luaL_dostring( m_vm.get(), m_text.c_str() );
+}
+
+const std::string& LuaScript::text() const
+{
+    return m_text;
 }
 
 bool LuaScript::hasFunction( const char* a_funcName )

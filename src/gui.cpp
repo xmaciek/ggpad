@@ -18,9 +18,7 @@
 #include <QFontDatabase>
 #include <QSplitter>
 
-#include "gui_controller_model.hpp"
-
-Gui::Gui( QPointer<QAbstractListModel> model )
+Gui::Gui( ControllerModel* model )
 : QMainWindow( 0 )
 , m_list( this )
 , m_scriptText( this )
@@ -30,7 +28,9 @@ Gui::Gui( QPointer<QAbstractListModel> model )
     splitterMain->addWidget( &m_list );
     splitterMain->addWidget( &m_scriptText );
     m_list.setModel( model );
+    connect( model, &ControllerModel::emitText, &m_scriptText, &QTextEdit::setText );
+    connect( &m_list, &QListView::clicked, model, &ControllerModel::selectionChanged );
     m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
-    resize( 720, 480 );
+    resize( 1280, 720 );
     show();
 }

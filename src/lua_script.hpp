@@ -33,6 +33,7 @@ public:
 
 private:
     std::unique_ptr<vm_type, void(*)(vm_type*)> m_vm;
+    std::string m_text;
 
     static int stackCount( vm_type* );
 
@@ -70,6 +71,7 @@ public:
     LuaScript();
 
     void doFile( const char* a_fileName );
+    const std::string& text() const;
 
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
     std::vector<Pair> getTable( const char* a_name );

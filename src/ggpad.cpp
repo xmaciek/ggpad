@@ -76,6 +76,7 @@ static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, con
     a_bindList->push_back( std::make_unique<Binding>() );
     a_bindList->back()->m_gamepad = a_gamepad;
     if ( !std::filesystem::exists( a_scriptFile ) ) {
+        LOG( LOG_ERROR, "Script file not found: %s\n", a_scriptFile );
         return;
     }
 
