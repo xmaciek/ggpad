@@ -15,23 +15,24 @@
 
 #pragma once
 
-#include <QAbstractListModel>
-#include <QListView>
-#include <QMainWindow>
-#include <QPointer>
-#include <QTextEdit>
+#include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <QRegularExpression>
 
-#include "gui_controller_model.hpp"
-#include "gui_syntax_highlight.hpp"
+#include <vector>
 
-class Gui : public QMainWindow {
+class SyntaxHighlight : public QSyntaxHighlighter {
     Q_OBJECT
 
 private:
-    QListView m_list;
-    QTextEdit m_scriptText;
-    SyntaxHighlight m_syntaxHighlight;
+    using Pair = struct {
+        QRegularExpression m_pattern;
+        QTextCharFormat m_format;
+        std::size_t m_offset;
+    };
+    std::vector<Pair> m_matchPairs;
 
 public:
-    Gui( ControllerModel* );
+    SyntaxHighlight( QTextDocument* parent );
+    void highlightBlock( const QString& ) override;
 };

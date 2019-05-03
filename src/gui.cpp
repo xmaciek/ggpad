@@ -22,6 +22,7 @@ Gui::Gui( ControllerModel* model )
 : QMainWindow( 0 )
 , m_list( this )
 , m_scriptText( this )
+, m_syntaxHighlight( m_scriptText.document() )
 {
     QSplitter* splitterMain = new QSplitter( this );
     setCentralWidget( splitterMain );
