@@ -28,6 +28,9 @@ Gui::Gui( ControllerModel* model )
     setCentralWidget( splitterMain );
     splitterMain->addWidget( &m_list );
     splitterMain->addWidget( &m_scriptText );
+    splitterMain->setStretchFactor( 0, 1 );
+    splitterMain->setStretchFactor( 1, 3 );
+
     m_list.setModel( model );
     connect( model, &ControllerModel::emitText, &m_scriptText, &QTextEdit::setText );
     connect( &m_list, &QListView::clicked, model, &ControllerModel::selectionChanged );
