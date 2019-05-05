@@ -162,7 +162,7 @@ static void convertEvent( const TableInfo& tableInfo, const struct input_event* 
 
     if ( entry->conversionType == ConversionType::Analog && entry->type == EV_ABS ) {
         int v = entry->maxVal - entry->minVal;
-        double d = (double)a_evIn->value / entry->maxRange;
+        double d = (double)( a_evIn->value - entry->minRange ) / ( entry->maxRange - entry->minRange );
         a_evOut->value = v * d + entry->minVal;
         a_evOut->button = entry->buttonMin;
         return;
