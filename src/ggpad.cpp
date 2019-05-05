@@ -71,17 +71,31 @@ GGPAD::~GGPAD()
     }
 }
 
-static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
+static Binding::Ptr& bindingForGamepad( Gamepad* a_gamepad, GGPAD::BindList* a_bindList )
 {
+    for ( GGPAD::BindList::iterator it = a_bindList->begin(); it != a_bindList->end(); ++it ) {
+        if ( (*it)->m_gamepadId == a_gamepad->uid() ) {
+            return *it;
+        }
+    }
     a_bindList->push_back( std::make_unique<Binding>() );
-    a_bindList->back()->m_gamepad = a_gamepad;
+    return a_bindList->back();
+
+}
+
+static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
+{
+    if ( ptr->m_script ) {
+        return;
+    }
+
     if ( !std::filesystem::exists( a_scriptFile ) ) {
         LOG( LOG_ERROR, "Script file not found: %s\n", a_scriptFile );
         return;
     }
 
-    a_bindList->back()->m_script = new Script();
-    Script& script = *a_bindList->back()->m_script;
+    ptr->m_script = new Script();
+    Script& script = *ptr->m_script;
     script.bindTable( "Gamepad", GAMEPAD_TABLE );
     script.bindTable( "Keyboard", KEYBOARD_TABLE );
     script.bindTable( "Mouse", MOUSE_TABLE );
@@ -91,11 +105,19 @@ static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, con
 
     script.doFile( a_scriptFile.c_str() );
 
-    a_bindList->back()->m_hasUpdate = script.hasFunction( "GGPAD_update" );
-    a_bindList->back()->m_hasEvent = script.hasFunction( "GGPAD_event" );
-    a_bindList->back()->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
+    ptr->m_hasUpdate = script.hasFunction( "GGPAD_update" );
+    ptr->m_hasEvent = script.hasFunction( "GGPAD_event" );
+    ptr->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
+}
 
-    a_bindList->back()->run();
+static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
+{
+    Binding::Ptr& ptr = bindingForGamepad( a_gamepad, a_bindList );
+    ptr->m_gamepadId = a_gamepad->uid();
+    ptr->m_gamepad = a_gamepad;
+    ptr->m_gamepadName = a_gamepad->displayName();
+    setScriptForGamepad( ptr.get(), a_scriptFile );
+    ptr->run();
 }
 
 void GGPAD::quit()
@@ -128,10 +150,10 @@ int GGPAD::exec()
         }
 
         {
-            const std::size_t size = m_list.size();
             std::lock_guard<std::mutex> lg( m_bindingMutex );
-            m_list.erase( std::remove_if( m_list.begin(), m_list.end(), Binding::isInvalid ), m_list.end() );
-            dirty |= size != m_list.size();
+            for ( Binding::Ptr& ptr : m_list ) {
+                dirty |= ptr->stopIfNeeded();
+            }
         }
         if ( dirty ) {
             LOG( LOG_DEBUG, "Changing dev listing\n" );

@@ -19,16 +19,12 @@
 
 #include "binding.hpp"
 
-bool Binding::isInvalid( const Binding::Ptr& it )
-{
-    return !it || !it->m_gamepad || !it->m_gamepad->isConnected();
-}
-
 Binding::Binding()
 : m_hasUpdate( false )
 , m_hasEvent( false )
 , m_hasNativeEvent( false )
 , m_isRunning( false )
+, m_gamepadId( 0 )
 , m_gamepad( nullptr )
 , m_script( nullptr )
 {
@@ -89,4 +85,29 @@ void Binding::eventLoop()
             }
         }
     }
+}
+
+std::string Binding::gamepadName() const
+{
+    return m_gamepadName + std::string( m_gamepad ? "" : " (disconnected)" );
+}
+
+bool Binding::stopIfNeeded()
+{
+    if ( !m_isRunning ) {
+        return false;
+    }
+    if ( m_gamepad && m_gamepad->isConnected() ) {
+        return false;
+    }
+
+    bool wasRunning = m_isRunning;
+    m_isRunning = false;
+    if ( wasRunning ) {
+        m_eventThread.join();
+        m_updateThread.join();
+    }
+    delete m_gamepad;
+    m_gamepad = nullptr;
+    return true;
 }

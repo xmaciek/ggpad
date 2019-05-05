@@ -44,7 +44,7 @@ QVariant ControllerModel::data( const QModelIndex& index, int role ) const
 
     switch ( role ) {
         case Qt::DisplayRole: {
-            return m_bindings->at( index.row() )->m_gamepad->displayName().c_str();
+            return m_bindings->at( index.row() )->gamepadName().c_str();
         }
         case Qt::DecorationRole:
             return QIcon::fromTheme( "input-gaming" );

@@ -35,6 +35,8 @@ public:
     bool m_hasNativeEvent : 1;
     bool m_isRunning : 1;
 
+    std::string m_gamepadName;
+    uint64_t m_gamepadId;
     Gamepad* m_gamepad;
     Script* m_script;
 
@@ -49,5 +51,6 @@ public:
     void eventLoop();
     void updateLoop();
 
-    static bool isInvalid( const Binding::Ptr& it );
+    std::string gamepadName() const;
+    bool stopIfNeeded();
 };
