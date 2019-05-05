@@ -90,7 +90,7 @@ static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
     }
 
     if ( !std::filesystem::exists( a_scriptFile ) ) {
-        LOG( LOG_ERROR, "Script file not found: %s\n", a_scriptFile );
+        LOG( LOG_ERROR, "Script file not found: %s\n", a_scriptFile.c_str() );
         return;
     }
 
