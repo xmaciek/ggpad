@@ -44,8 +44,6 @@ Binding::~Binding()
 
 void Binding::run()
 {
-    assert( m_gamepad );
-    assert( m_script );
     m_isRunning = true;
     m_eventThread = std::thread( &Binding::eventLoop, this );
     m_updateThread = std::thread( &Binding::updateLoop, this );
@@ -68,19 +66,17 @@ void Binding::updateLoop()
 void Binding::eventLoop()
 {
     assert( m_gamepad );
-    assert( m_script );
-
-    if ( !m_hasNativeEvent && !m_hasEvent ) {
-        return;
-    }
-
     while ( m_isRunning ) {
         std::list<Gamepad::Event> events = m_gamepad->pollChanges();
+        // script might not be written yet
+        if ( !m_script ) {
+            continue;
+        }
         LockGuard lockGuard( m_mutex );
         for ( const Gamepad::Event& it : events ) {
             if ( m_hasNativeEvent ) {
                 m_script->call( "GGPAD_nativeEvent" ) << it._type << it._code << it._value;
-            } else {
+            } else if ( m_hasEvent ) {
                 m_script->call( "GGPAD_event" ) << it.button << it.value;
             }
         }
