@@ -32,18 +32,14 @@ Binding::Binding()
 
 Binding::~Binding()
 {
-    bool active = m_isRunning;
-    m_isRunning = false;
-    if ( active ) {
-        m_eventThread.join();
-        m_updateThread.join();
-    }
+    stopScript();
     delete m_gamepad;
     delete m_script;
 }
 
 void Binding::run()
 {
+    LockGuard lockGuard( m_mutex );
     m_isRunning = true;
     m_eventThread = std::thread( &Binding::eventLoop, this );
     m_updateThread = std::thread( &Binding::updateLoop, this );
@@ -97,13 +93,20 @@ bool Binding::stopIfNeeded()
         return false;
     }
 
-    bool wasRunning = m_isRunning;
-    m_isRunning = false;
-    if ( wasRunning ) {
-        m_eventThread.join();
-        m_updateThread.join();
-    }
+    stopScript();
+
     delete m_gamepad;
     m_gamepad = nullptr;
     return true;
+}
+
+void Binding::stopScript()
+{
+    m_isRunning = false;
+    if ( m_eventThread.joinable() ) {
+        m_eventThread.join();
+    }
+    if ( m_updateThread.joinable() ) {
+        m_updateThread.join();
+    }
 }

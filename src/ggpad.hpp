@@ -48,6 +48,10 @@ private:
     std::unique_ptr<Gui> m_gui;
     ControllerModel m_guiModel;
 
+    void saveCurrentBinding();
+    void runCurrentBinding();
+    void stopCurrentBinding();
+
 public:
     GGPAD();
     ~GGPAD();

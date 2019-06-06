@@ -60,6 +60,9 @@ GGPAD::GGPAD()
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_systemEvent = std::make_unique<SystemEventLinux>();
     m_gui = std::make_unique<Gui>( &m_guiModel );
+    m_gui->setSaveCb( std::bind( &GGPAD::saveCurrentBinding, this ) );
+    m_gui->setRunCb( std::bind( &GGPAD::runCurrentBinding, this ) );
+    m_gui->setStopCb( std::bind( &GGPAD::stopCurrentBinding, this ) );
 }
 
 GGPAD::~GGPAD()
@@ -177,3 +180,23 @@ void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
     s_instance->m_systemEvent->mouseMove( a_key, a_state );
 }
 
+void GGPAD::saveCurrentBinding()
+{
+    LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
+}
+
+void GGPAD::runCurrentBinding()
+{
+    LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
+}
+
+void GGPAD::stopCurrentBinding()
+{
+    Binding* binding = m_guiModel.currentSelection();
+    if ( binding ) {
+        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, __LINE__, binding );
+        binding->stopScript();
+    } else {
+        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, __LINE__ );
+    }
+}

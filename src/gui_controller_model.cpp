@@ -22,6 +22,7 @@
 ControllerModel::ControllerModel( std::mutex* mtx, std::vector<std::unique_ptr<Binding>>* binds )
 : m_mutex( mtx )
 , m_bindings( binds )
+, m_currentBinding( nullptr )
 {
 }
 
@@ -66,8 +67,13 @@ void ControllerModel::selectionChanged( const QModelIndex& index )
     assert( index.row() < m_bindings->size() );
     QString text;
     if ( m_bindings->at( index.row() )->m_script ) {
-        text = m_bindings->at( index.row() )->m_script->text().c_str();
+        m_currentBinding = m_bindings->at( index.row() ).get();
+        text = m_currentBinding->m_script->text().c_str();
     }
     emit emitText( text );
 }
 
+Binding* ControllerModel::currentSelection() const
+{
+    return m_currentBinding;
+}

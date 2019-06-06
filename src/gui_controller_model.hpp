@@ -27,6 +27,7 @@ class ControllerModel : public QAbstractListModel {
 
     std::mutex* m_mutex;
     std::vector<std::unique_ptr<Binding>>* m_bindings;
+    Binding* m_currentBinding;
 
 public:
     ControllerModel( std::mutex*, std::vector<std::unique_ptr<Binding>>* );
@@ -36,6 +37,8 @@ public:
 
     void selectionChanged( const QModelIndex& );
     void refreshViews();
+
+    Binding* currentSelection() const;
 
 signals:
     void emitText( const QString& );

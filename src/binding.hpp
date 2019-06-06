@@ -53,4 +53,5 @@ public:
 
     std::string gamepadName() const;
     bool stopIfNeeded();
+    void stopScript();
 };

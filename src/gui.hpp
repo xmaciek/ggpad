@@ -16,10 +16,15 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QAction>
 #include <QListView>
 #include <QMainWindow>
 #include <QPointer>
 #include <QTextEdit>
+#include <QToolBar>
+
+#include <functional>
+#include <string>
 
 #include "gui_controller_model.hpp"
 #include "gui_syntax_highlight.hpp"
@@ -32,6 +37,23 @@ private:
     QTextEdit m_scriptText;
     SyntaxHighlight m_syntaxHighlight;
 
+    QToolBar m_toolbar;
+    QPointer<QAction> m_actionSave;
+    QPointer<QAction> m_actionRun;
+    QPointer<QAction> m_actionStop;
+
+    std::function<void()> m_saveScriptCb;
+    std::function<void()> m_runScriptCb;
+    std::function<void()> m_stopScriptCb;
+    std::function<void( const std::string& )> m_updateScriptCb;
+
+    void selectionChanged( const QString& );
+
 public:
     Gui( ControllerModel* );
+
+    void setSaveCb( const std::function<void()>& );
+    void setRunCb( const std::function<void()>& );
+    void setStopCb( const std::function<void()>& );
+    void setUpdateCb( const std::function<void(const std::string&)>& );
 };
