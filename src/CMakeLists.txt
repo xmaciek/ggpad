@@ -12,6 +12,7 @@ if( !LIBUDEV_FOUND )
 endif()
 
 set( SOURCES
+    barrier.cpp
     binding.cpp
     config.cpp
     gamepad_linux_default.cpp

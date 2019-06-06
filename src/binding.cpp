@@ -19,6 +19,11 @@
 
 #include "binding.hpp"
 
+constexpr std::chrono::high_resolution_clock::duration operator "" _ms( unsigned long long int i )
+{
+    return std::chrono::milliseconds( i );
+}
+
 Binding::Binding()
 : m_hasUpdate( false )
 , m_hasEvent( false )
@@ -33,6 +38,7 @@ Binding::Binding()
 Binding::~Binding()
 {
     stopScript();
+    stopPolling();
     delete m_gamepad;
     delete m_script;
 }
@@ -41,6 +47,7 @@ void Binding::run()
 {
     LockGuard lockGuard( m_mutex );
     m_isRunning = true;
+    m_pollThread = std::thread( &Binding::pollLoop, this );
     m_eventThread = std::thread( &Binding::eventLoop, this );
     m_updateThread = std::thread( &Binding::updateLoop, this );
 }
@@ -53,22 +60,41 @@ void Binding::updateLoop()
     assert( m_script );
     const double deltaTime = 5.0 / 1000;
     while ( m_isRunning ) {
-        std::this_thread::sleep_for( std::chrono::milliseconds( 5 ) );
-        LockGuard lockGuard( m_mutex );
+        std::this_thread::sleep_for( 5_ms );
+        LockGuard lockGuard( m_mutexScript );
         m_script->call( "GGPAD_update" ) << deltaTime;
     }
 }
 
-void Binding::eventLoop()
+void Binding::pollLoop()
 {
     assert( m_gamepad );
     while ( m_isRunning ) {
         std::list<Gamepad::Event> events = m_gamepad->pollChanges();
-        // script might not be written yet
-        if ( !m_script ) {
+        if ( events.empty() ) {
             continue;
         }
-        LockGuard lockGuard( m_mutex );
+        LockGuard lg( m_mutex );
+        m_eventQueue.splice( m_eventQueue.end(), std::move( events ) );
+        m_scriptBarrier.notify();
+    }
+
+}
+
+void Binding::eventLoop()
+{
+    while ( m_isRunning ) {
+        m_scriptBarrier.wait_for( 5_ms );
+        std::list<Gamepad::Event> events;
+        {
+            LockGuard lockGuard( m_mutex );
+            std::swap( events, m_eventQueue );
+        }
+        if ( events.empty() ) {
+            continue;
+        }
+
+        LockGuard lg( m_mutexScript );
         for ( const Gamepad::Event& it : events ) {
             if ( m_hasNativeEvent ) {
                 m_script->call( "GGPAD_nativeEvent" ) << it._type << it._code << it._value;
@@ -103,10 +129,19 @@ bool Binding::stopIfNeeded()
 void Binding::stopScript()
 {
     m_isRunning = false;
+
     if ( m_eventThread.joinable() ) {
         m_eventThread.join();
     }
     if ( m_updateThread.joinable() ) {
         m_updateThread.join();
+    }
+}
+
+void Binding::stopPolling()
+{
+    m_isRunning = false;
+    if ( m_pollThread.joinable() ) {
+        m_pollThread.join();
     }
 }

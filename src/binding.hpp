@@ -15,16 +15,27 @@
 
 #pragma once
 
+#include "barrier.hpp"
 #include "gamepad.hpp"
 #include "script.hpp"
 #include "macros.hpp"
 
+#include <condition_variable>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <thread>
 
 class Binding {
     DISABLE_COPY( Binding );
+    std::list<Gamepad::Event> m_eventQueue;
+    std::mutex m_mutex;
+    std::thread m_pollThread;
+
+    Barrier m_scriptBarrier;
+    std::mutex m_mutexScript;
+    std::thread m_updateThread;
+    std::thread m_eventThread;
 
 public:
     using Ptr = std::unique_ptr<Binding>;
@@ -34,24 +45,23 @@ public:
     bool m_hasEvent : 1;
     bool m_hasNativeEvent : 1;
     bool m_isRunning : 1;
+    bool m_isRunningScript : 1;
 
     std::string m_gamepadName;
     uint64_t m_gamepadId;
     Gamepad* m_gamepad;
     Script* m_script;
 
-    std::thread m_updateThread;
-    std::thread m_eventThread;
-    std::mutex m_mutex;
-
     Binding();
     ~Binding();
 
     void run();
+    void pollLoop();
     void eventLoop();
     void updateLoop();
 
     std::string gamepadName() const;
     bool stopIfNeeded();
     void stopScript();
+    void stopPolling();
 };

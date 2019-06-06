@@ -187,7 +187,14 @@ void GGPAD::saveCurrentBinding()
 
 void GGPAD::runCurrentBinding()
 {
-    LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
+    Binding* binding = m_guiModel.currentSelection();
+    if ( binding ) {
+        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, __LINE__, binding );
+        binding->stopScript();
+        binding->run();
+    } else {
+        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, __LINE__ );
+    }
 }
 
 void GGPAD::stopCurrentBinding()
