@@ -37,8 +37,7 @@ Binding::Binding()
 
 Binding::~Binding()
 {
-    stopScript();
-    stopPolling();
+    stop();
     delete m_gamepad;
     delete m_script;
 }
@@ -46,6 +45,9 @@ Binding::~Binding()
 void Binding::run()
 {
     LockGuard lockGuard( m_mutex );
+    if ( m_isRunning ) {
+        return;
+    }
     m_isRunning = true;
     m_pollThread = std::thread( &Binding::pollLoop, this );
     m_eventThread = std::thread( &Binding::eventLoop, this );
@@ -119,14 +121,14 @@ bool Binding::stopIfNeeded()
         return false;
     }
 
-    stopScript();
+    stop();
 
     delete m_gamepad;
     m_gamepad = nullptr;
     return true;
 }
 
-void Binding::stopScript()
+void Binding::stop()
 {
     m_isRunning = false;
 
@@ -136,12 +138,9 @@ void Binding::stopScript()
     if ( m_updateThread.joinable() ) {
         m_updateThread.join();
     }
-}
-
-void Binding::stopPolling()
-{
-    m_isRunning = false;
     if ( m_pollThread.joinable() ) {
         m_pollThread.join();
     }
+    LockGuard lg( m_mutexScript );
+    m_eventQueue.clear();
 }
