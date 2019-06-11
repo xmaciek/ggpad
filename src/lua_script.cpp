@@ -20,6 +20,8 @@
 #include "lua_script.hpp"
 #include "lua.hpp" // see CMake Lua convention
 
+#include "log.hpp"
+
 static void* l_alloc( void*, void* ptr, std::size_t, std::size_t nsize )
 {
     if ( !nsize ) {
@@ -56,7 +58,10 @@ void LuaScript::doFile( const char* a_fileName )
     ifs.read( m_text.data(), m_text.size() );
     ifs.close();
     m_text.back() = 0;
-    luaL_dostring( m_vm.get(), m_text.c_str() );
+    const bool ret = luaL_dostring( m_vm.get(), m_text.c_str() ) == LUA_OK;
+    if ( !ret ) {
+        LOG( LOG_ERROR, "%s\n", lua_tostring( m_vm.get(), -1 ) );
+    }
 }
 
 const std::string& LuaScript::text() const

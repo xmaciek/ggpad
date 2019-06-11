@@ -18,6 +18,8 @@
 
 #include <cassert>
 
+#include "log.hpp"
+
 LuaScript::Function::Function( lua_State* a_vm, const char* a_funcName )
 : m_vm( a_vm )
 , m_argc( 0 )
@@ -46,8 +48,12 @@ LuaScript::Function& LuaScript::Function::operator = ( LuaScript::Function&& f )
 
 LuaScript::Function::~Function()
 {
-    if ( m_vm ) {
-        lua_pcall( m_vm, m_argc, 0, 0 );
+    if ( !m_vm ) {
+        return;
+    }
+    const bool ret = lua_pcall( m_vm, m_argc, 0, 0 ) == LUA_OK;
+    if ( !ret ) {
+        LOG( LOG_ERROR, "%s\n", lua_tostring( m_vm, -1 ) );
     }
 }
 
