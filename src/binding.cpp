@@ -64,7 +64,7 @@ void Binding::updateLoop()
     while ( m_isRunning ) {
         std::this_thread::sleep_for( 5_ms );
         LockGuard lockGuard( m_mutexScript );
-        m_script->call( "GGPAD_update" ) << deltaTime;
+        m_script->call( "GGPAD_update" )( deltaTime );
     }
 }
 
@@ -99,9 +99,9 @@ void Binding::eventLoop()
         LockGuard lg( m_mutexScript );
         for ( const Gamepad::Event& it : events ) {
             if ( m_hasNativeEvent ) {
-                m_script->call( "GGPAD_nativeEvent" ) << it._type << it._code << it._value;
+                m_script->call( "GGPAD_nativeEvent" )( it._type, it._code, it._value );
             } else if ( m_hasEvent ) {
-                m_script->call( "GGPAD_event" ) << it.button << it.value;
+                m_script->call( "GGPAD_event" )( (int)it.button, it.value );
             }
         }
     }

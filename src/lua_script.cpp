@@ -80,7 +80,7 @@ bool LuaScript::hasFunction( const char* a_funcName )
 
 LuaScript::Function LuaScript::call( const char* a_funcName )
 {
-    return LuaScript::Function( m_vm.get(), a_funcName );
+    return LuaScript::Function( reinterpret_cast<lua::vm_type*>( m_vm.get() ), a_funcName );
 }
 
 static LuaScript::Variant getFromStack( LuaScript::vm_type* vm, int idx )

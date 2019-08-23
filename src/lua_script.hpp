@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "macros.hpp"
+#include "lua_function.hpp"
 
 struct lua_State;
 
@@ -41,24 +42,7 @@ private:
     static T get( vm_type*, std::size_t );
 
 public:
-    class Function {
-        DISABLE_COPY( Function )
-
-    private:
-        friend LuaScript;
-        vm_type* m_vm;
-        int m_argc;
-        Function( vm_type* a_vm, const char* a_funcName );
-
-    public:
-        Function( Function&& );
-        Function& operator = ( Function&& );
-        ~Function();
-#define ARGUMENT( A_TYPE ) Function& operator << ( A_TYPE );
-        ARGUMENT( int )
-        ARGUMENT( double )
-#undef ARGUMENT
-    };
+    using Function = lua::Function;
 
     using Variant = std::variant<std::string,int64_t>;
     using Pair = std::pair<Variant,Variant>;

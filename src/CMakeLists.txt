@@ -24,7 +24,7 @@ set( SOURCES
     gui_syntax_highlight.cpp
     idcounter.cpp
     lua_script.cpp
-    lua_script_function.cpp
+    lua_function.cpp
     main.cpp
     systemevent_linux.cpp
     wrap_udev.cpp
