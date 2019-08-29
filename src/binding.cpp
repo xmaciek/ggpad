@@ -24,17 +24,6 @@ constexpr std::chrono::high_resolution_clock::duration operator "" _ms( unsigned
     return std::chrono::milliseconds( i );
 }
 
-Binding::Binding()
-: m_hasUpdate( false )
-, m_hasEvent( false )
-, m_hasNativeEvent( false )
-, m_isRunning( false )
-, m_gamepadId( 0 )
-, m_gamepad( nullptr )
-, m_script( nullptr )
-{
-}
-
 Binding::~Binding()
 {
     stop();
@@ -56,7 +45,7 @@ void Binding::run()
 
 void Binding::updateLoop()
 {
-    if ( !m_hasUpdate ) {
+    if ( !m_updateFunc ) {
         return;
     }
     assert( m_script );
@@ -64,7 +53,7 @@ void Binding::updateLoop()
     while ( m_isRunning ) {
         std::this_thread::sleep_for( 5_ms );
         LockGuard lockGuard( m_mutexScript );
-        m_script->call( "GGPAD_update" )( deltaTime );
+        m_updateFunc( deltaTime );
     }
 }
 
@@ -98,10 +87,10 @@ void Binding::eventLoop()
 
         LockGuard lg( m_mutexScript );
         for ( const Gamepad::Event& it : events ) {
-            if ( m_hasNativeEvent ) {
-                m_script->call( "GGPAD_nativeEvent" )( it._type, it._code, it._value );
-            } else if ( m_hasEvent ) {
-                m_script->call( "GGPAD_event" )( (int)it.button, it.value );
+            if ( m_nativeEventFunc ) {
+                m_nativeEventFunc( it._type, it._code, it._value );
+            } else {
+                m_eventFunc( (int)it.button, it.value );
             }
         }
     }
@@ -143,4 +132,12 @@ void Binding::stop()
     }
     LockGuard lg( m_mutexScript );
     m_eventQueue.clear();
+}
+
+void Binding::setScript( Script* sc )
+{
+    m_script = sc;
+    m_updateFunc = sc->call( "GGPAD_update" );
+    m_eventFunc = sc->call( "GGPAD_event" );
+    m_nativeEventFunc = sc->call( "GGPAD_nativeEvent" );
 }

@@ -25,18 +25,18 @@ class Binding;
 class ControllerModel : public QAbstractListModel {
     Q_OBJECT
 
-    std::mutex* m_mutex;
-    std::vector<std::unique_ptr<Binding>>* m_bindings;
-    Binding* m_currentBinding;
+    mutable std::recursive_mutex m_mutex;
+    std::vector<Binding*> m_bindings;
+    Binding* m_currentBinding = nullptr;
 
 public:
-    ControllerModel( std::mutex*, std::vector<std::unique_ptr<Binding>>* );
+    ControllerModel() = default;
 
     virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
 
     void selectionChanged( const QModelIndex& );
-    void refreshViews();
+    void refreshViews( std::vector<Binding*> );
 
     Binding* currentSelection() const;
 

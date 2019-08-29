@@ -51,8 +51,6 @@ static const std::vector<Script::Record> MOUSE_TABLE {
 GGPAD* GGPAD::s_instance = nullptr;
 
 GGPAD::GGPAD()
-: m_isRunning( true )
-, m_guiModel( &m_bindingMutex, &m_list )
 {
     if ( !s_instance ) {
         s_instance = this;
@@ -97,20 +95,16 @@ static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
         return;
     }
 
-    ptr->m_script = new Script();
-    Script& script = *ptr->m_script;
-    script.bindTable( "Gamepad", GAMEPAD_TABLE );
-    script.bindTable( "Keyboard", KEYBOARD_TABLE );
-    script.bindTable( "Mouse", MOUSE_TABLE );
+    Script* script = new Script();
+    script->bindTable( "Gamepad", GAMEPAD_TABLE );
+    script->bindTable( "Keyboard", KEYBOARD_TABLE );
+    script->bindTable( "Mouse", MOUSE_TABLE );
 
-    script.registerFunction( "GGPAD_keyboardSet", &Script::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
-    script.registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
+    script->registerFunction( "GGPAD_keyboardSet", &Script::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
+    script->registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
 
-    script.doFile( a_scriptFile.c_str() );
-
-    ptr->m_hasUpdate = script.hasFunction( "GGPAD_update" );
-    ptr->m_hasEvent = script.hasFunction( "GGPAD_event" );
-    ptr->m_hasNativeEvent = script.hasFunction( "GGPAD_nativeEvent" );
+    script->doFile( a_scriptFile.c_str() );
+    ptr->setScript( script );
 }
 
 static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
@@ -128,18 +122,27 @@ void GGPAD::quit()
     m_isRunning = false;
 }
 
+static std::vector<Binding*> prepareViewList( const GGPAD::BindList& list )
+{
+    std::vector<Binding*> ret;
+    ret.reserve( list.size() );
+    for ( const GGPAD::BindList::value_type& it : list ) {
+        ret.emplace_back( it.get() );
+    }
+    return ret;
+}
+
 int GGPAD::exec()
 {
     bool dirty = false;
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
         dirty = true;
-        std::lock_guard<std::mutex> lg( m_bindingMutex );
         pushNewBinding( it, &m_list, m_config[ it->uid() ] );
     }
 
     if ( dirty ) {
-        m_guiModel.refreshViews();
+        m_guiModel.refreshViews( prepareViewList( m_list ) );
     }
 
     while ( m_isRunning ) {
@@ -148,23 +151,19 @@ int GGPAD::exec()
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
             dirty = true;
-            std::lock_guard<std::mutex> lg( m_bindingMutex );
             pushNewBinding( it, &m_list, m_config[ it->uid() ] );
         }
 
-        {
-            std::lock_guard<std::mutex> lg( m_bindingMutex );
-            for ( Binding::Ptr& ptr : m_list ) {
-                dirty |= ptr->stopIfNeeded();
-            }
+        for ( Binding::Ptr& ptr : m_list ) {
+            dirty |= ptr->stopIfNeeded();
         }
+
         if ( dirty ) {
             LOG( LOG_DEBUG, "Changing dev listing\n" );
-            m_guiModel.refreshViews();
+            m_guiModel.refreshViews( prepareViewList( m_list ) );
         }
     }
 
-    std::lock_guard<std::mutex> lg( m_bindingMutex );
     m_list.clear();
 
     return 0;

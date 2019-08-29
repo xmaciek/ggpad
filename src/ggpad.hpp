@@ -32,15 +32,14 @@ class GGPAD {
     DISABLE_COPY( GGPAD );
 
 public:
-    using BindList = std::vector<std::unique_ptr<Binding>>;
+    using BindList = std::vector<Binding::Ptr>;
 
 private:
     static GGPAD* s_instance;
     Config m_config;
 
-    bool m_isRunning;
+    bool m_isRunning = true;
 
-    std::mutex m_bindingMutex;
     BindList m_list;
 
     std::unique_ptr<Watcher> m_deviceWatcher;

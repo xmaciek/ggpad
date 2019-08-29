@@ -41,18 +41,19 @@ public:
     using Ptr = std::unique_ptr<Binding>;
     using LockGuard = std::lock_guard<std::mutex>;
 
-    bool m_hasUpdate : 1;
-    bool m_hasEvent : 1;
-    bool m_hasNativeEvent : 1;
-    bool m_isRunning : 1;
-    bool m_isRunningScript : 1;
+    void setScript( Script* );
+    Script::Function m_updateFunc;
+    Script::Function m_eventFunc;
+    Script::Function m_nativeEventFunc;
+    bool m_isRunning = false;
+    bool m_isRunningScript = false;
 
     std::string m_gamepadName;
-    uint64_t m_gamepadId;
-    Gamepad* m_gamepad;
-    Script* m_script;
+    uint64_t m_gamepadId = 0;
+    Gamepad* m_gamepad = nullptr;
+    Script* m_script = nullptr;
 
-    Binding();
+    Binding() = default;
     ~Binding();
 
     void run();
