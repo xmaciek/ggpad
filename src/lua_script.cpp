@@ -13,14 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include "lua_script.hpp"
+
+#include "log.hpp"
+
+#include <lua.hpp>
+
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
 
-#include "lua_script.hpp"
-#include "lua.hpp" // see CMake Lua convention
-
-#include "log.hpp"
 
 static void* l_alloc( void*, void* ptr, std::size_t, std::size_t nsize )
 {
