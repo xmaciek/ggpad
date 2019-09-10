@@ -16,26 +16,42 @@
 #include "idcounter.hpp"
 
 #include <algorithm>
+#include <mutex>
+#include <set>
 
-uint64_t IdCounter::create( uint32_t vidpid )
+static std::mutex& mutex()
 {
-    std::lock_guard<std::mutex> lockGuard( m_mutex );
+    static std::mutex mtx;
+    return mtx;
+}
+
+static std::set<uint64_t>& set()
+{
+    static std::set<uint64_t> s;
+    return s;
+}
+
+IdCounter::IdCounter( uint32_t vidpid )
+{
+    std::lock_guard<std::mutex> lockGuard( mutex() );
     uint32_t candidate = 0;
     for ( int i = 0; i < 100; i++ ) {
         candidate = (uint64_t)vidpid | ( (uint64_t)i << 32 );
-        if ( !std::binary_search( m_counts.begin(), m_counts.end(), candidate ) ) {
+        if ( set().count( candidate ) == 0 ) {
             break;
         }
     }
-    m_counts.push_back( candidate );
-    std::sort( m_counts.begin(), m_counts.end() );
-    return candidate;
+    set().insert( candidate );
+    m_value = candidate;
 }
 
-void IdCounter::release( uint64_t id )
+IdCounter::~IdCounter()
 {
-    std::lock_guard<std::mutex> lockGuard( m_mutex );
-    std::remove( m_counts.begin(), m_counts.end(), id );
+    std::lock_guard<std::mutex> lockGuard( mutex() );
+    set().erase( m_value );
 }
 
-IdCounter g_idCounter;
+IdCounter::operator uint64_t () const
+{
+    return m_value;
+}

@@ -15,23 +15,24 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "gamepad.hpp"
+#include "idcounter.hpp"
 #include "macros.hpp"
 #include "maptable_linux.hpp"
+
+#include <cstdint>
 
 class GamepadLinux : public Gamepad {
     DISABLE_COPY( GamepadLinux )
 
 public:
-    typedef value_type state_type[ Gamepad::max ];
+    using state_type = value_type[ Gamepad::max ];
 
 private:
-    int m_fd;
-    uint32_t m_vidpid;
-    uint64_t m_uid;
-    state_type m_state;
+    int m_fd = -1;
+    uint32_t m_vidpid = 0;
+    IdCounter m_uid;
+    state_type m_state = { 0 };
     TableInfo m_tableInfo;
     std::string m_displayName;
 

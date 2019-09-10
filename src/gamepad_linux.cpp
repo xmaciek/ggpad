@@ -15,6 +15,7 @@
 
 #include "gamepad_linux.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -39,10 +40,22 @@ static TableInfo driverFixForVidPid( uint32_t vidpid )
     }
 }
 
+static std::string nameForFd( int fd )
+{
+    assert( fd > 0 );
+    std::array<char, 256> buff{ 0 };
+    ::ioctl( fd, EVIOCGNAME( buff.size() ), buff.data() );
+    return buff.data();
+}
+
+static uint32_t vidpidForFd( int fd )
+{
+    assert( fd > 0 );
+    input_id id = { 0 };
+    ::ioctl( fd, EVIOCGID, &id );
+    return ( (uint32_t)id.vendor << 16 ) | id.product;
+}
 GamepadLinux::GamepadLinux( const char* a_devPath )
-: Gamepad()
-, m_fd( -1 )
-, m_vidpid( 0 )
 {
     LOG( LOG_DEBUG, "opening device %s\n", a_devPath );
     assert( a_devPath );
@@ -53,19 +66,12 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
         return;
     }
 
-    struct input_id id;
-    std::memset( &id, 0, sizeof( id ) );
-    ioctl( m_fd, EVIOCGID, &id );
-    m_vidpid = id.vendor;
-    m_vidpid <<= 16;
-    m_vidpid |= id.product;
-    m_uid = g_idCounter.create( m_vidpid );
+    m_vidpid = vidpidForFd( m_fd );
+    m_uid = IdCounter( m_vidpid );
     LOG( LOG_DEBUG, "Found device : %08X : %016X\n", this, m_vidpid, m_uid );
-    m_tableInfo = driverFixForVidPid( m_vidpid );
 
-    char name[ 256 ] = { 0 };
-    ioctl( m_fd, EVIOCGNAME( sizeof( name ) ), name );
-    m_displayName = name;
+    m_tableInfo = driverFixForVidPid( m_vidpid );
+    m_displayName = nameForFd( m_fd );
 }
 
 GamepadLinux::~GamepadLinux()
@@ -74,7 +80,6 @@ GamepadLinux::~GamepadLinux()
     if ( m_fd >= 0 ) {
         ::close( m_fd );
     }
-    g_idCounter.release( m_uid );
 }
 
 uint32_t GamepadLinux::vidpid() const
@@ -92,7 +97,7 @@ static bool waitForEvent( int* fd )
     assert( fd );
     assert( *fd > 0 );
 
-    struct pollfd p;
+    pollfd p;
     p.fd = *fd;
     p.events = POLLIN;
     const int ret = poll( &p, 1, 40 );
@@ -108,13 +113,13 @@ static bool waitForEvent( int* fd )
     return ret > 0;
 }
 
-static bool getEvent( int* fd, struct input_event* ev )
+static bool getEvent( int* fd, input_event* ev )
 {
     assert( fd );
     assert( *fd > 0 );
     assert( ev );
 
-    const int ret = ::read( *fd, ev, sizeof( struct input_event ) );
+    const int ret = ::read( *fd, ev, sizeof( input_event ) );
     const int e = errno;
     switch ( e ) {
         default:
@@ -128,7 +133,7 @@ static bool getEvent( int* fd, struct input_event* ev )
 
         case 0:
         case EAGAIN:
-            return ret == sizeof( struct input_event );
+            return ret == sizeof( input_event );
     }
 }
 
@@ -138,7 +143,7 @@ int bcmp( const void* lhs, const void* rhs )
     return T::spaceship( *reinterpret_cast<const T*>( lhs ), *reinterpret_cast<const T*>( rhs ) );
 }
 
-static void convertEvent( const TableInfo& tableInfo, const struct input_event* a_evIn,
+static void convertEvent( const TableInfo& tableInfo, const input_event* a_evIn,
                           Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
 {
     assert( a_evIn );
@@ -182,7 +187,7 @@ static void convertEvent( const TableInfo& tableInfo, const struct input_event* 
     }
 }
 
-static bool isBlacklistEvent( const struct input_event& ev )
+static bool isBlacklistEvent( const input_event& ev )
 {
     switch ( ev.type ) {
         case 0:
@@ -206,8 +211,8 @@ std::list<Gamepad::Event> GamepadLinux::pollChanges()
     }
 
     // grab all events before doing conversion to avoid read-convert-read-convert endless loop
-    struct input_event ev{ 0 };
-    std::list<struct input_event> events;
+    input_event ev{ 0 };
+    std::list<input_event> events;
     while ( getEvent( &m_fd, &ev ) ) {
         if ( !isBlacklistEvent( ev ) ) {
             events.push_back( ev );
@@ -215,7 +220,7 @@ std::list<Gamepad::Event> GamepadLinux::pollChanges()
     }
 
     std::list<Gamepad::Event> list;
-    for ( const struct input_event& it : events ) {
+    for ( const input_event& it : events ) {
         list.push_back( Gamepad::Event() );
         convertEvent( m_tableInfo, &it, &list.back(), m_state );
     };

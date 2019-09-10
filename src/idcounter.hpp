@@ -16,18 +16,13 @@
 #pragma once
 
 #include <cstdint>
-#include <mutex>
-#include <vector>
 
 class IdCounter {
-private:
-    std::mutex m_mutex;
-    std::vector<uint64_t> m_counts;
+    uint64_t m_value = 0;
 
 public:
     IdCounter() = default;
-    uint64_t create( uint32_t vidpid );
-    void release( uint64_t id );
+    IdCounter( uint32_t );
+    ~IdCounter();
+    operator uint64_t () const;
 };
-
-extern IdCounter g_idCounter;
