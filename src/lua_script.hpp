@@ -25,8 +25,10 @@
 
 struct lua_State;
 
-class LuaScript {
-    DISABLE_COPY( LuaScript )
+namespace lua {
+
+class Script {
+    DISABLE_COPY( Script )
 
 public:
     using vm_type = struct lua_State;
@@ -52,7 +54,7 @@ public:
         int value;
     } Record;
 
-    LuaScript();
+    Script();
 
     void doFile( const char* a_fileName );
     const std::string& text() const;
@@ -68,13 +70,15 @@ public:
     template <typename FUNC_TYPE, FUNC_TYPE FUNC, typename ARG0, typename ARG1>
     static int facade( vm_type* vm )
     {
-        if ( LuaScript::stackCount( vm ) != 2 ) {
+        if ( Script::stackCount( vm ) != 2 ) {
             return 0;
         }
         (*FUNC)(
-            LuaScript::get<ARG0>( vm, 1 ),
-            LuaScript::get<ARG1>( vm, 2 )
+            Script::get<ARG0>( vm, 1 ),
+            Script::get<ARG1>( vm, 2 )
         );
         return 1;
     }
 };
+
+} // namespace lua

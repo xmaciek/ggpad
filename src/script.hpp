@@ -16,4 +16,4 @@
 #pragma once
 
 #include "lua_script.hpp"
-using Script = LuaScript;
+using Script = lua::Script;
