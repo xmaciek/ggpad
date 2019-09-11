@@ -136,6 +136,8 @@ void Binding::stop()
 
 void Binding::setScript( Script* sc )
 {
+    assert( !m_isRunning );
+    delete m_script;
     m_script = sc;
     m_updateFunc = sc->call( "GGPAD_update" );
     m_eventFunc = sc->call( "GGPAD_event" );
