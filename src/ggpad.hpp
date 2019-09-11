@@ -50,6 +50,7 @@ private:
     void saveCurrentBinding();
     void runCurrentBinding();
     void stopCurrentBinding();
+    void openScript( const std::string& );
 
 public:
     GGPAD();

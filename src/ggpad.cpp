@@ -61,6 +61,7 @@ GGPAD::GGPAD()
     m_gui->setSaveCb( std::bind( &GGPAD::saveCurrentBinding, this ) );
     m_gui->setRunCb( std::bind( &GGPAD::runCurrentBinding, this ) );
     m_gui->setStopCb( std::bind( &GGPAD::stopCurrentBinding, this ) );
+    m_gui->setUpdateCb( std::bind( &GGPAD::openScript, this, std::placeholders::_1 ) );
 }
 
 GGPAD::~GGPAD()
@@ -86,15 +87,21 @@ static Binding::Ptr& bindingForGamepad( Gamepad* a_gamepad, GGPAD::BindList* a_b
 
 static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
 {
-    if ( ptr->m_script ) {
+    if ( !ptr ) {
+        LOG( LOG_DEBUG, "Gamepad not selected" );
         return;
+    }
+    if ( ptr->m_script ) {
+        LOG( LOG_DEBUG, "Gamepad already have script running, stopping" );
+        ptr->stop();
     }
 
     if ( !std::filesystem::exists( a_scriptFile ) ) {
-        LOG( LOG_ERROR, "Script file not found: %s\n", a_scriptFile.c_str() );
+        LOG( LOG_ERROR, "Script file not found: %s", a_scriptFile.c_str() );
         return;
     }
 
+    LOG( LOG_DEBUG, "Opening file \"%s\"", a_scriptFile.c_str() );
     Script* script = new Script();
     script->bindTable( "Gamepad", GAMEPAD_TABLE );
     script->bindTable( "Keyboard", KEYBOARD_TABLE );
@@ -205,4 +212,9 @@ void GGPAD::stopCurrentBinding()
     } else {
         LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, __LINE__ );
     }
+}
+
+void GGPAD::openScript( const std::string& filePath )
+{
+    setScriptForGamepad( m_guiModel.currentSelection(), filePath );
 }

@@ -18,6 +18,7 @@
 #include "log.hpp"
 #include "logview.hpp"
 
+#include <QFileDialog>
 #include <QFontDatabase>
 #include <QIcon>
 #include <QSplitter>
@@ -43,9 +44,7 @@ Gui::Gui( ControllerModel* model )
 
     m_toolbar.setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
     m_actionOpen = m_toolbar.addAction( QIcon::fromTheme( "document-open" ), "Open" );
-    connect( m_actionOpen, &QAction::triggered,
-             [this]() { if ( m_openScriptCb ) { m_openScriptCb(); } }
-            );
+    connect( m_actionOpen, &QAction::triggered, this, &Gui::onClickOpen );
 
     m_actionSave = m_toolbar.addAction( QIcon::fromTheme( "document-save" ), "Save" );
     connect( m_actionSave, &QAction::triggered,
@@ -100,4 +99,24 @@ void Gui::setStopCb( const std::function<void()>& foo )
 void Gui::setUpdateCb( const std::function<void(const std::string&)>& foo )
 {
     m_updateScriptCb = foo;
+}
+
+void Gui::onClickOpen()
+{
+    QPointer<QFileDialog> ptr = new QFileDialog(
+        this
+        , "Open .lua script"
+        , QDir::homePath()
+        , "Lua (*.lua)"
+    );
+    ptr->setViewMode( QFileDialog::Detail );
+    if ( !ptr->exec() ) {
+        return;
+    }
+    QStringList fileNames = ptr->selectedFiles();
+    ptr.clear();
+    assert( m_updateScriptCb );
+    for ( const QString& it : fileNames ) {
+        m_updateScriptCb( it.toStdString() );
+    }
 }

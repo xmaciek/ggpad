@@ -51,6 +51,8 @@ private:
 
     void selectionChanged( const QString& );
 
+    void onClickOpen();
+
 public:
     Gui( ControllerModel* );
 
