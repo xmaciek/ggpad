@@ -13,29 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#include "log.hpp"
 
-#include <array>
-#include <cstdlib>
-
-class Log {
-public:
-    Log() = default;
-    virtual ~Log() = default;
-    virtual void append( const char* ) = 0;
-};
-
-extern Log* g_log;
-
-#define LOG_ERROR stderr
-#define LOG_DEBUG stdout
-
-#define LOG( LVL, ... ) { \
-    if ( g_log ) { \
-        std::array<char, 256> buff{ 0 }; \
-        std::snprintf( buff.data(), buff.size(), __VA_ARGS__ ); \
-        g_log->append( buff.data() ); \
-    } else { \
-        std::fprintf( LVL, __VA_ARGS__ ); \
-    } \
-}
+Log* g_log = nullptr;

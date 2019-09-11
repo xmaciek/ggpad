@@ -55,9 +55,9 @@ GGPAD::GGPAD()
     if ( !s_instance ) {
         s_instance = this;
     }
-    m_deviceWatcher = std::make_unique<WatcherUDev>();
-    m_systemEvent = std::make_unique<SystemEventLinux>();
     m_gui = std::make_unique<Gui>( &m_guiModel );
+    m_systemEvent = std::make_unique<SystemEventLinux>();
+    m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_gui->setSaveCb( std::bind( &GGPAD::saveCurrentBinding, this ) );
     m_gui->setRunCb( std::bind( &GGPAD::runCurrentBinding, this ) );
     m_gui->setStopCb( std::bind( &GGPAD::stopCurrentBinding, this ) );

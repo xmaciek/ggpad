@@ -25,6 +25,8 @@ set( SOURCES
     idcounter.cpp
     lua_script.cpp
     lua_function.cpp
+    log.cpp
+    logview.cpp
     main.cpp
     systemevent_linux.cpp
     wrap_udev.cpp
@@ -35,6 +37,7 @@ set( QHEADERS
     gui.hpp
     gui_controller_model.hpp
     gui_syntax_highlight.hpp
+    logview.hpp
 )
 
 qt5_wrap_cpp( MOCABLES ${QHEADERS} )

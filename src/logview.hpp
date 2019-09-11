@@ -15,27 +15,13 @@
 
 #pragma once
 
-#include <array>
-#include <cstdlib>
+#include "log.hpp"
+#include <QTextEdit>
 
-class Log {
+class LogView : public QTextEdit, public Log {
+    Q_OBJECT
 public:
-    Log() = default;
-    virtual ~Log() = default;
-    virtual void append( const char* ) = 0;
+    LogView( QWidget* );
+    virtual ~LogView();
+    void append( const char* ) override;
 };
-
-extern Log* g_log;
-
-#define LOG_ERROR stderr
-#define LOG_DEBUG stdout
-
-#define LOG( LVL, ... ) { \
-    if ( g_log ) { \
-        std::array<char, 256> buff{ 0 }; \
-        std::snprintf( buff.data(), buff.size(), __VA_ARGS__ ); \
-        g_log->append( buff.data() ); \
-    } else { \
-        std::fprintf( LVL, __VA_ARGS__ ); \
-    } \
-}

@@ -15,12 +15,13 @@
 
 #include "gui.hpp"
 
+#include "log.hpp"
+#include "logview.hpp"
+
 #include <QFontDatabase>
 #include <QIcon>
 #include <QSplitter>
 #include <QVBoxLayout>
-
-#include "log.hpp"
 
 Gui::Gui( ControllerModel* model )
 : QMainWindow( 0 )
@@ -29,8 +30,16 @@ Gui::Gui( ControllerModel* model )
 , m_syntaxHighlight( m_scriptText.document() )
 , m_toolbar( this )
 {
+    LogView* logView = new LogView( this );
+    logView->setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
+
     QSplitter* splitterMain = new QSplitter( this );
-    setCentralWidget( splitterMain );
+    QSplitter* splitterLog = new QSplitter( Qt::Vertical, this );
+    setCentralWidget( splitterLog );
+    splitterLog->addWidget( splitterMain );
+    splitterLog->addWidget( logView );
+    splitterLog->setStretchFactor( 0, 4 );
+    splitterLog->setStretchFactor( 1, 1 );
 
     m_toolbar.setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
     m_actionOpen = m_toolbar.addAction( QIcon::fromTheme( "document-open" ), "Open" );
@@ -52,8 +61,8 @@ Gui::Gui( ControllerModel* model )
     connect( m_actionStop, &QAction::triggered,
              [this]() { if ( m_stopScriptCb ) { m_stopScriptCb(); } }
             );
-
     addToolBar( Qt::TopToolBarArea, &m_toolbar );
+
 
     splitterMain->addWidget( &m_list );
     splitterMain->addWidget( &m_scriptText );
