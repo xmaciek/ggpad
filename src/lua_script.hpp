@@ -43,6 +43,8 @@ private:
     template <typename T>
     static T get( vm_type*, std::size_t );
 
+    void pop();
+
 public:
     using Function = lua::Function;
 

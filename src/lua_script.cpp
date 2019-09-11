@@ -35,6 +35,11 @@ static void* l_alloc( void*, void* ptr, std::size_t, std::size_t nsize )
 
 namespace lua {
 
+enum Address : int {
+    eKey = -2
+    , eValue = -1
+};
+
 Script::Script()
 : m_vm( lua_newstate( l_alloc, 0 ), lua_close )
 {
@@ -47,7 +52,7 @@ void Script::bindTable( const char* a_name, const std::vector<Script::Record>& a
     lua_newtable( m_vm.get() );
     for ( const Script::Record& it : a_table ) {
         lua_pushinteger( m_vm.get(), it.value );
-        lua_setfield( m_vm.get(), -2, it.name );
+        lua_setfield( m_vm.get(), Address::eKey, it.name );
     }
     lua_setglobal( m_vm.get(), a_name );
 }
@@ -64,7 +69,7 @@ void Script::doFile( const char* a_fileName )
     m_text.back() = 0;
     const bool ret = luaL_dostring( m_vm.get(), m_text.c_str() ) == LUA_OK;
     if ( !ret ) {
-        LOG( LOG_ERROR, "%s\n", lua_tostring( m_vm.get(), -1 ) );
+        LOG( LOG_ERROR, "%s", lua_tostring( m_vm.get(), Address::eValue ) );
     }
 }
 
@@ -77,8 +82,8 @@ bool Script::hasFunction( const char* a_funcName )
 {
     assert( a_funcName );
     lua_getglobal( m_vm.get(), a_funcName );
-    const bool ret = lua_isfunction( m_vm.get(), -1 );
-    lua_pop( m_vm.get(), 1 );
+    const bool ret = lua_isfunction( m_vm.get(), Address::eValue );
+    pop();
     return ret;
 }
 
@@ -103,14 +108,17 @@ std::vector<Script::Pair> Script::getTable( const char* name )
 {
     std::vector<Script::Pair> v;
     lua_getglobal( m_vm.get(), name );
-    if ( !lua_istable( m_vm.get(), -1 ) ) {
+    if ( !lua_istable( m_vm.get(), Address::eValue ) ) {
         return v;
     }
 
     lua_pushnil( m_vm.get() );
-    while ( lua_next( m_vm.get(), -2 ) ) {
-        v.push_back( { getFromStack( m_vm.get(), -2 ), getFromStack( m_vm.get(), -1 ) } );
-        lua_pop( m_vm.get(), 1 );
+    while ( lua_next( m_vm.get(), Address::eKey ) ) {
+        v.emplace_back(
+            getFromStack( m_vm.get(), Address::eKey ),
+            getFromStack( m_vm.get(), Address::eValue )
+        );
+        pop();
     }
     return v;
 }
@@ -135,6 +143,11 @@ template <>
 bool Script::get<bool>( vm_type* vm, std::size_t n )
 {
     return !!lua_tointeger( vm, n );
+}
+
+void Script::pop()
+{
+    lua_pop( m_vm.get(), 1 );
 }
 
 } // namespace lua
