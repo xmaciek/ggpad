@@ -30,7 +30,7 @@ Function::Function( vm_type* vm, const char* funcName )
 
 Function::operator bool () const
 {
-    return getFunc();
+    return m_vm && m_funcName && getFunc();
 }
 
 bool Function::getFunc() const

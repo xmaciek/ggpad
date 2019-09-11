@@ -91,10 +91,8 @@ static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
         LOG( LOG_DEBUG, "Gamepad not selected" );
         return;
     }
-    if ( ptr->m_script ) {
-        LOG( LOG_DEBUG, "Gamepad already have script running, stopping" );
-        ptr->stop();
-    }
+
+    ptr->stop();
 
     if ( !std::filesystem::exists( a_scriptFile ) ) {
         LOG( LOG_ERROR, "Script file not found: %s", a_scriptFile.c_str() );
