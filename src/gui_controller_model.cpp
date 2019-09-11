@@ -57,11 +57,7 @@ void ControllerModel::selectionChanged( const QModelIndex& index )
     std::lock_guard<std::recursive_mutex> lg( m_mutex );
     assert( index.row() < m_bindings.size() );
     m_currentBinding = m_bindings[ index.row() ];
-    QString text;
-    if ( m_currentBinding && m_currentBinding->m_script ) {
-        text = m_currentBinding->m_script->text().c_str();
-    }
-    emit emitText( text );
+    emit selectionChanged( m_currentBinding );
 }
 
 Binding* ControllerModel::currentSelection() const

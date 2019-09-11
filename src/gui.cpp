@@ -69,8 +69,19 @@ Gui::Gui( ControllerModel* model )
     splitterMain->setStretchFactor( 1, 3 );
 
     m_list.setModel( model );
-    connect( model, &ControllerModel::emitText, &m_scriptText, &QTextEdit::setText );
-    connect( &m_list, &QListView::clicked, model, &ControllerModel::selectionChanged );
+    connect(
+        &m_list
+        , &QListView::clicked
+        , model
+        , qOverload<const QModelIndex&>( &ControllerModel::selectionChanged )
+    );
+
+    connect(
+        model
+        , qOverload<Binding*>( &ControllerModel::selectionChanged )
+        , this
+        , &Gui::selectionChanged
+    );
     m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
     resize( 1280, 720 );
     show();
@@ -119,4 +130,16 @@ void Gui::onClickOpen()
     for ( const QString& it : fileNames ) {
         m_updateScriptCb( it.toStdString() );
     }
+}
+
+void Gui::selectionChanged( Binding* b )
+{
+    if ( !b ) {
+        return;
+    }
+    QString text;
+    if ( b->m_script ) {
+        text = b->m_script->text().c_str();
+    }
+    m_scriptText.setText( text );
 }

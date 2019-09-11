@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <mutex>
+
 class Binding;
 
 class ControllerModel : public QAbstractListModel {
@@ -41,5 +42,6 @@ public:
     Binding* currentSelection() const;
 
 signals:
-    void emitText( const QString& );
+    void selectionChanged( Binding* );
+
 };

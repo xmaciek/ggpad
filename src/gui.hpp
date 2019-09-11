@@ -26,6 +26,7 @@
 #include <functional>
 #include <string>
 
+#include "binding.hpp"
 #include "gui_controller_model.hpp"
 #include "gui_syntax_highlight.hpp"
 
@@ -49,7 +50,7 @@ private:
     std::function<void()> m_stopScriptCb;
     std::function<void( const std::string& )> m_updateScriptCb;
 
-    void selectionChanged( const QString& );
+    void selectionChanged( Binding* );
 
     void onClickOpen();
 
