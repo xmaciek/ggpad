@@ -38,10 +38,12 @@ private:
     SyntaxHighlight m_syntaxHighlight;
 
     QToolBar m_toolbar;
+    QPointer<QAction> m_actionOpen;
     QPointer<QAction> m_actionSave;
     QPointer<QAction> m_actionRun;
     QPointer<QAction> m_actionStop;
 
+    std::function<void()> m_openScriptCb;
     std::function<void()> m_saveScriptCb;
     std::function<void()> m_runScriptCb;
     std::function<void()> m_stopScriptCb;
@@ -52,6 +54,7 @@ private:
 public:
     Gui( ControllerModel* );
 
+    void setOpenCb( const std::function<void()>& );
     void setSaveCb( const std::function<void()>& );
     void setRunCb( const std::function<void()>& );
     void setStopCb( const std::function<void()>& );

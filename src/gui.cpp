@@ -32,12 +32,12 @@ Gui::Gui( ControllerModel* model )
     QSplitter* splitterMain = new QSplitter( this );
     setCentralWidget( splitterMain );
 
-    QWidget* pageLeft = new QWidget( this );
-    QVBoxLayout* pageLeftLayout = new QVBoxLayout( pageLeft );
-    pageLeftLayout->addWidget( &m_toolbar );
-    pageLeftLayout->addWidget( &m_list );
-
     m_toolbar.setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
+    m_actionOpen = m_toolbar.addAction( QIcon::fromTheme( "document-open" ), "Open" );
+    connect( m_actionOpen, &QAction::triggered,
+             [this]() { if ( m_openScriptCb ) { m_openScriptCb(); } }
+            );
+
     m_actionSave = m_toolbar.addAction( QIcon::fromTheme( "document-save" ), "Save" );
     connect( m_actionSave, &QAction::triggered,
              [this]() { if ( m_saveScriptCb ) { m_saveScriptCb(); } }
@@ -53,7 +53,9 @@ Gui::Gui( ControllerModel* model )
              [this]() { if ( m_stopScriptCb ) { m_stopScriptCb(); } }
             );
 
-    splitterMain->addWidget( pageLeft );
+    addToolBar( Qt::TopToolBarArea, &m_toolbar );
+
+    splitterMain->addWidget( &m_list );
     splitterMain->addWidget( &m_scriptText );
     splitterMain->setStretchFactor( 0, 1 );
     splitterMain->setStretchFactor( 1, 3 );
@@ -64,6 +66,11 @@ Gui::Gui( ControllerModel* model )
     m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
     resize( 1280, 720 );
     show();
+}
+
+void Gui::setOpenCb( const std::function<void()>& foo )
+{
+    m_openScriptCb = foo;
 }
 
 void Gui::setSaveCb( const std::function<void()>& foo )
