@@ -33,7 +33,6 @@ Binding::~Binding()
 
 void Binding::run()
 {
-    LockGuard lockGuard( m_mutex );
     if ( m_isRunning ) {
         return;
     }
@@ -65,8 +64,9 @@ void Binding::pollLoop()
         if ( events.empty() ) {
             continue;
         }
-        LockGuard lg( m_mutex );
-        m_eventQueue.splice( m_eventQueue.end(), std::move( events ) );
+        for ( const Gamepad::Event& it : events ) {
+            m_queue.emplace( it );
+        }
         m_scriptBarrier.notify();
     }
 
@@ -74,22 +74,15 @@ void Binding::pollLoop()
 
 void Binding::eventLoop()
 {
+    std::optional<Gamepad::Event> ev;
     while ( m_isRunning ) {
         m_scriptBarrier.wait_for( 5_ms );
-        std::list<Gamepad::Event> events;
-        {
-            LockGuard lockGuard( m_mutex );
-            std::swap( events, m_eventQueue );
-        }
-        if ( events.empty() ) {
-            continue;
-        }
-
-        LockGuard lg( m_mutexScript );
-        for ( const Gamepad::Event& it : events ) {
+        while ( m_isRunning && ( ev = m_queue.pop() ) ) {
+            const Gamepad::Event& it = *ev;
+            LockGuard lg( m_mutexScript );
             if ( m_nativeEventFunc ) {
                 m_nativeEventFunc( it._type, it._code, it._value );
-            } else {
+            } else if ( m_eventFunc ) {
                 m_eventFunc( (int)it.button, it.value );
             }
         }
@@ -130,8 +123,6 @@ void Binding::stop()
     if ( m_pollThread.joinable() ) {
         m_pollThread.join();
     }
-    LockGuard lg( m_mutexScript );
-    m_eventQueue.clear();
 }
 
 void Binding::setScript( Script* sc )
@@ -143,3 +134,4 @@ void Binding::setScript( Script* sc )
     m_eventFunc = sc->call( "GGPAD_event" );
     m_nativeEventFunc = sc->call( "GGPAD_nativeEvent" );
 }
+

@@ -17,8 +17,9 @@
 
 #include "barrier.hpp"
 #include "gamepad.hpp"
-#include "script.hpp"
 #include "macros.hpp"
+#include "pipe.hpp"
+#include "script.hpp"
 
 #include <condition_variable>
 #include <list>
@@ -28,8 +29,8 @@
 
 class Binding {
     DISABLE_COPY( Binding );
-    std::list<Gamepad::Event> m_eventQueue;
-    std::mutex m_mutex;
+
+    Pipe<Gamepad::Event> m_queue;
     std::thread m_pollThread;
 
     Barrier m_scriptBarrier;
@@ -64,4 +65,5 @@ public:
     std::string gamepadName() const;
     bool stopIfNeeded();
     void stop();
+
 };
