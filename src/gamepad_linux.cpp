@@ -68,7 +68,7 @@ GamepadLinux::GamepadLinux( const char* a_devPath )
 
     m_vidpid = vidpidForFd( m_fd );
     m_uid = IdCounter( m_vidpid );
-    LOG( LOG_DEBUG, "Found device : %08X : %016X\n", this, m_vidpid, m_uid );
+    LOG( LOG_DEBUG, "Found device : %p : %016X\n", this, m_vidpid );
 
     m_tableInfo = driverFixForVidPid( m_vidpid );
     m_displayName = nameForFd( m_fd );
