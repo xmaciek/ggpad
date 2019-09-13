@@ -20,8 +20,13 @@
 
 class LogView : public QTextEdit, public Log {
     Q_OBJECT
+
 public:
     LogView( QWidget* );
     virtual ~LogView();
     void append( const char* ) override;
+
+signals:
+    void message( const QString& );
+
 };

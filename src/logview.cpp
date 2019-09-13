@@ -20,6 +20,7 @@
 LogView::LogView( QWidget* parent )
 : QTextEdit( parent )
 {
+    connect( this, &LogView::message, this, &QTextEdit::append );
     g_log = this;
 }
 
@@ -35,8 +36,7 @@ void LogView::append( const char* text )
         str.truncate( str.size() - 1 );
     }
     str.prepend( QTime::currentTime().toString( "<b>[HH:mm:ss:zzz]</b> " ) );
-    QTextEdit::append( str );
-    ensureCursorVisible();
+    emit message( str );
 }
 
 
