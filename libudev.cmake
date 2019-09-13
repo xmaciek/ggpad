@@ -13,11 +13,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-find_package( Lua REQUIRED )
-if ( NOT TARGET Lua::Lua )
-    add_library( Lua::Lua UNKNOWN IMPORTED )
-    set_target_properties( Lua::Lua PROPERTIES
-        IMPORTED_LOCATION  "${LUA_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}"
+find_path( LIBUDEV_INCLUDE_DIR NAMES libudev.h )
+find_library( LIBUDEV_LIBRARY NAMES udev )
+
+set( LIBUDEV_FOUND ( LIBUDEV_INCLUDE_DIR AND LIBUDEV_LIBRARY ) )
+
+if ( NOT LIBUDEV_FOUND )
+    message( FATAL_ERROR "unable to locate libudev" )
+endif()
+
+if ( NOT TARGET Udev::Udev )
+    add_library( Udev::Udev UNKNOWN IMPORTED )
+    set_target_properties( Udev::Udev PROPERTIES
+        IMPORTED_LOCATION  "${LIBUDEV_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LIBUDEV_INCLUDE_DIR}"
     )
 endif()
+
+mark_as_advanced(
+    LIBUDEV_FOUND
+    LIBUDEV_INCLUDE_DIR
+    LIBUDEV_LIBRARY
+)

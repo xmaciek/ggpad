@@ -13,11 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-find_package( Lua REQUIRED )
-if ( NOT TARGET Lua::Lua )
-    add_library( Lua::Lua UNKNOWN IMPORTED )
-    set_target_properties( Lua::Lua PROPERTIES
-        IMPORTED_LOCATION  "${LUA_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}"
-    )
-endif()
+
+set( GGPAD_LINUX ( UNIX AND NOT APPLE AND NOT WIN32 ) )
+
+mark_as_advanced( GGPAD_LINUX )
