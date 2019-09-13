@@ -143,7 +143,7 @@ int GGPAD::exec()
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
         dirty = true;
-        pushNewBinding( it, &m_list, m_config[ it->uid() ] );
+        pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
     }
 
     if ( dirty ) {
@@ -156,7 +156,7 @@ int GGPAD::exec()
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
             dirty = true;
-            pushNewBinding( it, &m_list, m_config[ it->uid() ] );
+            pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
         }
 
         for ( Binding::Ptr& ptr : m_list ) {

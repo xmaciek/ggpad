@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "config.hpp"
+#include "settings.hpp"
 
 #include <cassert>
 #include <cstdlib>
@@ -24,7 +24,7 @@
 #include "log.hpp"
 #include "script.hpp"
 
-static std::filesystem::path configDir()
+static std::filesystem::path settingsDir()
 {
     const char* home = std::getenv( "HOME" );
     assert( home );
@@ -34,50 +34,50 @@ static std::filesystem::path configDir()
     return path;
 }
 
-static std::filesystem::path configFile()
+static std::filesystem::path settingsFile()
 {
-    return configDir() / "config.lua";
+    return settingsDir() / "settings.lua";
 }
 
-Config::Config()
+Settings::Settings()
 {
-    std::filesystem::path filePath = configFile();
+    std::filesystem::path filePath = settingsFile();
     if ( !std::filesystem::exists( filePath ) ) {
-        LOG( LOG_ERROR, "Unable to read config file %s\n", filePath.c_str() );
+        LOG( LOG_ERROR, "Unable to read settings file %s\n", filePath.c_str() );
         return;
     }
     Script luaScript;
     luaScript.doFile( filePath.c_str() );
     std::vector<Script::Pair> table = luaScript.getTable( "bindings" );
-    LOG( LOG_DEBUG, "Number of bindings: %d\n", table.size() );
+    LOG( LOG_DEBUG, "Number of bindings: %lu\n", table.size() );
     for ( Script::Pair& it : table ) {
         m_gamepadsScriptFile[ std::get<int64_t>( it.first ) ] = std::get<std::string>( it.second );
-        LOG( LOG_DEBUG, "Found binding for 0x%08X: %s\n", std::get<int64_t>( it.first ), std::get<std::string>( it.second ).c_str() );
+        LOG( LOG_DEBUG, "Found binding for 0x%08lX: %s\n", std::get<int64_t>( it.first ), std::get<std::string>( it.second ).c_str() );
     }
 }
 
-Config::~Config()
+Settings::~Settings()
 {
 }
 
 static std::string formatVidPid( uint64_t vidpid )
 {
     char text[ 18 ];
-    std::snprintf( text, 18, "0x%08X", vidpid );
+    std::snprintf( text, 18, "0x%08luX", vidpid );
     return text;
 }
 
-void Config::save()
+void Settings::save()
 {
-    std::filesystem::create_directory( configDir() );
-    std::ofstream ofs( configFile() );
+    std::filesystem::create_directory( settingsDir() );
+    std::ofstream ofs( settingsFile() );
     ofs << "bindings = {}" << std::endl;
     for ( const std::pair<uint64_t,std::string>& it : m_gamepadsScriptFile ) {
         ofs << "bindings[ " << formatVidPid( it.first ) << " ] = \"" << it.second << "\"" << std::endl;
     }
 }
 
-std::string& Config::operator [] ( uint64_t uid )
+std::string& Settings::operator [] ( uint64_t uid )
 {
     return m_gamepadsScriptFile[ uid ];
 }

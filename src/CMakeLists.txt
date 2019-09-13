@@ -14,7 +14,6 @@ endif()
 set( SOURCES
     barrier.cpp
     binding.cpp
-    config.cpp
     gamepad_linux_default.cpp
     gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
     gamepad_linux.cpp
@@ -28,6 +27,7 @@ set( SOURCES
     log.cpp
     logview.cpp
     main.cpp
+    settings.cpp
     systemevent_linux.cpp
     wrap_udev.cpp
     watcher_udev.cpp

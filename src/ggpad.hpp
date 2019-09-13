@@ -21,11 +21,11 @@
 #include <utility>
 
 #include "binding.hpp"
-#include "config.hpp"
 #include "gui.hpp"
 #include "gui_controller_model.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
+#include "settings.hpp"
 #include "systemevent.hpp"
 
 class GGPAD {
@@ -36,7 +36,7 @@ public:
 
 private:
     static GGPAD* s_instance;
-    Config m_config;
+    Settings m_settings;
 
     bool m_isRunning = true;
 

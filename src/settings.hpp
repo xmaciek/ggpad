@@ -19,14 +19,14 @@
 
 #include "macros.hpp"
 
-class Config {
-    DISABLE_COPY( Config )
+class Settings {
+    DISABLE_COPY( Settings )
 
     std::map<uint64_t, std::string> m_gamepadsScriptFile;
 
 public:
-    Config();
-    ~Config();
+    Settings();
+    ~Settings();
 
     void save();
 
