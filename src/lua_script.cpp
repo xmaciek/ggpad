@@ -78,18 +78,9 @@ const std::string& Script::text() const
     return m_text;
 }
 
-bool Script::hasFunction( const char* a_funcName )
+Script::Function Script::operator [] ( std::string_view name )
 {
-    assert( a_funcName );
-    lua_getglobal( m_vm.get(), a_funcName );
-    const bool ret = lua_isfunction( m_vm.get(), Address::eValue );
-    pop();
-    return ret;
-}
-
-Script::Function Script::call( const char* a_funcName )
-{
-    return Script::Function( reinterpret_cast<lua::vm_type*>( m_vm.get() ), a_funcName );
+    return Script::Function( reinterpret_cast<lua::vm_type*>( m_vm.get() ), name.data() );
 }
 
 static Script::Variant getFromStack( Script::vm_type* vm, int idx )

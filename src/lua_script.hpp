@@ -64,8 +64,7 @@ public:
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
     std::vector<Pair> getTable( const char* a_name );
 
-    bool hasFunction( const char* a_funcName );
-    Function call( const char* a_funcName );
+    Function operator [] ( std::string_view );
 
     void registerFunction( const char*, callback_type );
 

@@ -130,9 +130,9 @@ void Binding::setScript( Script* sc )
     assert( !m_isRunning );
     delete m_script;
     m_script = sc;
-    m_updateFunc = sc->call( "GGPAD_update" );
-    m_eventFunc = sc->call( "GGPAD_event" );
-    m_nativeEventFunc = sc->call( "GGPAD_nativeEvent" );
+    m_updateFunc = (*sc)[ "GGPAD_update" ];
+    m_eventFunc = (*sc)[ "GGPAD_event" ];
+    m_nativeEventFunc = (*sc)[ "GGPAD_nativeEvent" ];
 }
 
 void* Binding::editor() const
