@@ -17,18 +17,21 @@
 
 #include "log.hpp"
 #include "logview.hpp"
+#include "gui_syntax_highlight.hpp"
 
 #include <QFileDialog>
 #include <QFontDatabase>
 #include <QIcon>
+#include <QLabel>
 #include <QSplitter>
+#include <QTextEdit>
 #include <QVBoxLayout>
+
 
 Gui::Gui( ControllerModel* model )
 : QMainWindow( 0 )
 , m_list( this )
-, m_scriptText( this )
-, m_syntaxHighlight( m_scriptText.document() )
+, m_editorStack( this )
 , m_toolbar( this )
 {
     LogView* logView = new LogView( this );
@@ -64,9 +67,16 @@ Gui::Gui( ControllerModel* model )
 
 
     splitterMain->addWidget( &m_list );
-    splitterMain->addWidget( &m_scriptText );
+    splitterMain->addWidget( &m_editorStack );
     splitterMain->setStretchFactor( 0, 1 );
     splitterMain->setStretchFactor( 1, 3 );
+
+    {
+        QTextEdit* tmp = new QTextEdit( this );
+        tmp->setText( "Nya there!" );
+        m_editorStack.addWidget( tmp );
+        m_editorStack.setCurrentWidget( 0 );
+    }
 
     m_list.setModel( model );
     connect(
@@ -82,7 +92,6 @@ Gui::Gui( ControllerModel* model )
         , this
         , &Gui::selectionChanged
     );
-    m_scriptText.setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
     resize( 1280, 720 );
     show();
 }
@@ -132,14 +141,27 @@ void Gui::onClickOpen()
     }
 }
 
+static QTextEdit* createEditor( QWidget* parent )
+{
+    QTextEdit* editor = new QTextEdit( parent );
+    new SyntaxHighlight( editor->document() );
+    editor->setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
+    return editor;
+}
+
 void Gui::selectionChanged( Binding* b )
 {
     if ( !b ) {
         return;
     }
-    QString text;
-    if ( b->m_script ) {
-        text = b->m_script->text().c_str();
+    QTextEdit* editor = reinterpret_cast<QTextEdit*>( b->editor() );
+    if ( !editor ) {
+        editor = createEditor( this );
+        b->setEditor( editor );
+        m_editorStack.addWidget( editor );
+        if ( b->m_script ) {
+            editor->setText( b->m_script->text().c_str() );
+        }
     }
-    m_scriptText.setText( text );
+    m_editorStack.setCurrentWidget( editor );
 }

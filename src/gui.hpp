@@ -20,23 +20,22 @@
 #include <QListView>
 #include <QMainWindow>
 #include <QPointer>
+#include <QStackedWidget>
 #include <QTextEdit>
 #include <QToolBar>
 
 #include <functional>
 #include <string>
 
-#include "binding.hpp"
 #include "gui_controller_model.hpp"
-#include "gui_syntax_highlight.hpp"
+#include "binding.hpp"
 
 class Gui : public QMainWindow {
     Q_OBJECT
 
 private:
     QListView m_list;
-    QTextEdit m_scriptText;
-    SyntaxHighlight m_syntaxHighlight;
+    QStackedWidget m_editorStack;
 
     QToolBar m_toolbar;
     QPointer<QAction> m_actionOpen;

@@ -135,3 +135,12 @@ void Binding::setScript( Script* sc )
     m_nativeEventFunc = sc->call( "GGPAD_nativeEvent" );
 }
 
+void* Binding::editor() const
+{
+    return m_editor;
+}
+
+void Binding::setEditor( void* e )
+{
+    m_editor = e;
+}

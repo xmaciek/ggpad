@@ -29,6 +29,7 @@
 
 class Binding {
     DISABLE_COPY( Binding );
+    void* m_editor = nullptr;
 
     Pipe<Gamepad::Event> m_queue;
     std::thread m_pollThread;
@@ -66,4 +67,6 @@ public:
     bool stopIfNeeded();
     void stop();
 
+    void* editor() const;
+    void setEditor( void* );
 };
