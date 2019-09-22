@@ -25,11 +25,18 @@
 #include "log.hpp"
 #include "wrap_udev.hpp"
 
+namespace {
+
+// waits up to 10ms for event
+bool waitForEvent( int fd )
+{
+    pollfd p = { .fd = fd, .events = POLLIN };
+    return ::poll( &p, 1, 10 ) > 0;
+}
+
+} // namespace
+
 WatcherUDev::WatcherUDev()
-: Watcher()
-, m_udevPtr( nullptr )
-, m_udevMonitorPtr( nullptr )
-, m_udevEnumeratePtr( nullptr )
 {
     m_udevPtr = udev_new();
     if ( !m_udevPtr ) {
@@ -79,8 +86,8 @@ std::list<Gamepad*> WatcherUDev::currentDevices()
     std::list<Gamepad*> list;
     int errnum = udev_enumerate_scan_devices( m_udevEnumeratePtr );
 
-    struct udev_list_entry* devListEntry = 0;
-    struct udev_list_entry* allDevices = udev_enumerate_get_list_entry( m_udevEnumeratePtr );
+    udev_list_entry* devListEntry = nullptr;
+    udev_list_entry* allDevices = udev_enumerate_get_list_entry( m_udevEnumeratePtr );
 
     for ( devListEntry = allDevices; devListEntry; devListEntry = udev_list_entry_get_next( devListEntry ) ) {
         const char* path = udev_list_entry_get_name( devListEntry );
@@ -111,14 +118,6 @@ std::list<Gamepad*> WatcherUDev::currentDevices()
     }
 
     return list;
-}
-
-static bool waitForEvent( int fd )
-{
-    struct pollfd p;
-    p.fd = fd;
-    p.events = POLLIN;
-    return ::poll( &p, 1, 10 ) > 0;
 }
 
 std::list<Gamepad*> WatcherUDev::newDevices()
@@ -161,7 +160,7 @@ std::list<Gamepad*> WatcherUDev::newDevices()
             continue;
         }
 
-        LOG( LOG_DEBUG, "New device detected as %s\n", action );
+        LOG( LOG_DEBUG, "New device detected as %s", action );
         const char* devPath = device.devnode();
         if ( !devPath ) {
             continue;

@@ -26,9 +26,9 @@ class WatcherUDev : public Watcher {
     DISABLE_COPY( WatcherUDev )
 
 private:
-    struct udev* m_udevPtr;
-    struct udev_monitor* m_udevMonitorPtr;
-    struct udev_enumerate* m_udevEnumeratePtr;
+    udev* m_udevPtr = nullptr;
+    udev_monitor* m_udevMonitorPtr = nullptr;
+    udev_enumerate* m_udevEnumeratePtr = nullptr;
 
 public:
     WatcherUDev();

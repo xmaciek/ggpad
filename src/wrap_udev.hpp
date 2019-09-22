@@ -23,10 +23,11 @@ class UDevDevice {
     DISABLE_COPY( UDevDevice )
 
 private:
-    udev_device* m_ptr;
+    udev_device* m_ptr = nullptr;
 
 public:
-    UDevDevice( udev_device* p = 0 );
+    UDevDevice() = default;
+    UDevDevice( udev_device* p );
     ~UDevDevice();
 
     UDevDevice( UDevDevice&& );

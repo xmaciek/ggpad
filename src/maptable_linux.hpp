@@ -57,11 +57,10 @@ typedef struct [[gnu::packed]] {
 template<std::size_t S>
 class MapSort {
 private:
-    MapTable m_table[ S ];
+    MapTable m_table[ S ] = { 0 };
 
 public:
     constexpr MapSort( const MapTable table[ S ] )
-    : m_table{}
     {
         for ( std::size_t i = 0; i < S; i++ ) {
             m_table[ i ] = table[ i ];

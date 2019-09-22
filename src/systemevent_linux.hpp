@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include <mutex>
-
 #include <linux/input.h>
 #include <linux/uinput.h>
 
@@ -27,11 +25,10 @@ class SystemEventLinux : public SystemEvent {
     DISABLE_COPY( SystemEventLinux )
 
 private:
-    std::mutex m_mutex;
-    int32_t m_uinput;
-    struct uinput_user_dev m_virtualDevice;
-    struct input_event m_flush;
+    int32_t m_uinput = 0;
+    ::input_event m_flush = { 0 };
 
+    bool isValid() const;
     void sendEvent( uint32_t a_type, uint32_t a_code, int32_t a_value );
 
 public:

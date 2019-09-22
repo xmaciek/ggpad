@@ -32,7 +32,9 @@
 extern const TableInfo GamepadDefault;
 extern const TableInfo xboxOneSBluetooth_0x045E02FD;
 
-static TableInfo driverFixForVidPid( uint32_t vidpid )
+namespace {
+
+TableInfo driverFixForVidPid( uint32_t vidpid )
 {
     switch ( vidpid ) {
         case 0x045E02FD: return xboxOneSBluetooth_0x045E02FD;
@@ -40,7 +42,7 @@ static TableInfo driverFixForVidPid( uint32_t vidpid )
     }
 }
 
-static std::string nameForFd( int fd )
+std::string nameForFd( int fd )
 {
     assert( fd > 0 );
     std::array<char, 256> buff{ 0 };
@@ -48,49 +50,14 @@ static std::string nameForFd( int fd )
     return buff.data();
 }
 
-static uint32_t vidpidForFd( int fd )
+uint32_t vidpidForFd( int fd )
 {
     assert( fd > 0 );
     input_id id = { 0 };
     ::ioctl( fd, EVIOCGID, &id );
     return ( (uint32_t)id.vendor << 16 ) | id.product;
 }
-GamepadLinux::GamepadLinux( const char* a_devPath )
-{
-    LOG( LOG_DEBUG, "opening device %s\n", a_devPath );
-    assert( a_devPath );
-    m_fd = ::open( a_devPath, O_RDONLY | O_NONBLOCK );
-    if ( m_fd < 0 ) {
-        LOG( LOG_ERROR, "unable to open device path\n" );
-        assert( !"unable to open device path" );
-        return;
-    }
 
-    m_vidpid = vidpidForFd( m_fd );
-    m_uid = IdCounter( m_vidpid );
-    LOG( LOG_DEBUG, "Found device : %p : %016X\n", this, m_vidpid );
-
-    m_tableInfo = driverFixForVidPid( m_vidpid );
-    m_displayName = nameForFd( m_fd );
-}
-
-GamepadLinux::~GamepadLinux()
-{
-    LOG( LOG_DEBUG, "Disconnected device %p : %016X\n", this, m_vidpid );
-    if ( m_fd >= 0 ) {
-        ::close( m_fd );
-    }
-}
-
-uint32_t GamepadLinux::vidpid() const
-{
-    return m_vidpid;
-}
-
-uint64_t GamepadLinux::uid() const
-{
-    return m_uid;
-}
 
 static bool waitForEvent( int* fd )
 {
@@ -113,7 +80,7 @@ static bool waitForEvent( int* fd )
     return ret > 0;
 }
 
-static bool getEvent( int* fd, input_event* ev )
+bool getEvent( int* fd, input_event* ev )
 {
     assert( fd );
     assert( *fd > 0 );
@@ -123,7 +90,7 @@ static bool getEvent( int* fd, input_event* ev )
     const int e = errno;
     switch ( e ) {
         default:
-            LOG( LOG_ERROR, "Unhandled errno %d\n", e );
+            LOG( LOG_ERROR, "Unhandled errno %d", e );
             [[fallthrough]];
 
         case ENODEV: // device lost
@@ -143,8 +110,8 @@ int bcmp( const void* lhs, const void* rhs )
     return T::spaceship( *reinterpret_cast<const T*>( lhs ), *reinterpret_cast<const T*>( rhs ) );
 }
 
-static void convertEvent( const TableInfo& tableInfo, const input_event* a_evIn,
-                          Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
+void convertEvent( const TableInfo& tableInfo, const input_event* a_evIn,
+    Gamepad::Event* a_evOut, GamepadLinux::state_type& a_state )
 {
     assert( a_evIn );
     assert( a_evOut );
@@ -187,7 +154,7 @@ static void convertEvent( const TableInfo& tableInfo, const input_event* a_evIn,
     }
 }
 
-static bool isBlacklistEvent( const input_event& ev )
+bool isBlacklistEvent( const input_event& ev )
 {
     switch ( ev.type ) {
         case 0:
@@ -196,6 +163,45 @@ static bool isBlacklistEvent( const input_event& ev )
         default:
             return false;
     }
+}
+
+} // namespace
+
+GamepadLinux::GamepadLinux( const char* a_devPath )
+{
+    LOG( LOG_DEBUG, "opening device %s", a_devPath );
+    assert( a_devPath );
+    m_fd = ::open( a_devPath, O_RDONLY | O_NONBLOCK );
+    if ( m_fd < 0 ) {
+        LOG( LOG_ERROR, "unable to open device path" );
+        assert( !"unable to open device path" );
+        return;
+    }
+
+    m_vidpid = vidpidForFd( m_fd );
+    m_uid = IdCounter( m_vidpid );
+    LOG( LOG_DEBUG, "Found device : %p : %016X", this, m_vidpid );
+
+    m_tableInfo = driverFixForVidPid( m_vidpid );
+    m_displayName = nameForFd( m_fd );
+}
+
+GamepadLinux::~GamepadLinux()
+{
+    LOG( LOG_DEBUG, "Disconnected device %p : %016X", this, m_vidpid );
+    if ( m_fd >= 0 ) {
+        ::close( m_fd );
+    }
+}
+
+uint32_t GamepadLinux::vidpid() const
+{
+    return m_vidpid;
+}
+
+uint64_t GamepadLinux::uid() const
+{
+    return m_uid;
 }
 
 std::list<Gamepad::Event> GamepadLinux::pollChanges()
