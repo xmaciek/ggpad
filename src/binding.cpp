@@ -19,10 +19,7 @@
 
 #include "binding.hpp"
 
-constexpr std::chrono::high_resolution_clock::duration operator "" _ms( unsigned long long int i )
-{
-    return std::chrono::milliseconds( i );
-}
+using namespace std::chrono_literals;
 
 Binding::~Binding()
 {
@@ -50,7 +47,7 @@ void Binding::updateLoop()
     assert( m_script );
     const double deltaTime = 5.0 / 1000;
     while ( m_isRunning ) {
-        std::this_thread::sleep_for( 5_ms );
+        std::this_thread::sleep_for( 5ms );
         LockGuard lockGuard( m_mutexScript );
         m_updateFunc( deltaTime );
     }
@@ -76,7 +73,7 @@ void Binding::eventLoop()
 {
     std::optional<Gamepad::Event> ev;
     while ( m_isRunning ) {
-        m_scriptBarrier.wait_for( 5_ms );
+        m_scriptBarrier.wait_for( 5ms );
         while ( m_isRunning && ( ev = m_queue.pop() ) ) {
             const Gamepad::Event& it = *ev;
             LockGuard lg( m_mutexScript );
