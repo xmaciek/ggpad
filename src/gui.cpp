@@ -27,6 +27,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+#include <cassert>
 
 Gui::Gui( ControllerModel* model )
 : QMainWindow( 0 )
@@ -75,7 +76,6 @@ Gui::Gui( ControllerModel* model )
         QTextEdit* tmp = new QTextEdit( this );
         tmp->setText( "Nya there!" );
         m_editorStack.addWidget( tmp );
-        m_editorStack.setCurrentWidget( 0 );
     }
 
     m_list.setModel( model );
@@ -157,6 +157,7 @@ void Gui::selectionChanged( Binding* b )
     QTextEdit* editor = reinterpret_cast<QTextEdit*>( b->editor() );
     if ( !editor ) {
         editor = createEditor( this );
+        assert( editor );
         b->setEditor( editor );
         m_editorStack.addWidget( editor );
         if ( b->m_script ) {
