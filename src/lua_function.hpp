@@ -60,8 +60,9 @@ private:
     }
 
 public:
-    Function() = default;
-    Function( vm_type*, const char* );
+    ~Function() noexcept = default;
+    Function() noexcept = default;
+    Function( vm_type*, const char* ) noexcept;
     operator bool () const;
 
     template <class... ARGS>

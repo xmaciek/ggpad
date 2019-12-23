@@ -22,7 +22,7 @@
 
 namespace lua {
 
-Function::Function( vm_type* vm, const char* funcName )
+Function::Function( vm_type* vm, const char* funcName ) noexcept
 : m_vm( vm )
 , m_funcName( funcName )
 {
