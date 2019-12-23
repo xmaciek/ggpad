@@ -193,11 +193,11 @@ void GGPAD::runCurrentBinding()
 {
     Binding* binding = m_guiModel.currentSelection();
     if ( binding ) {
-        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, __LINE__, binding );
+        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__, binding );
         binding->stop();
         binding->run();
     } else {
-        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, __LINE__ );
+        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__ );
     }
 }
 
@@ -205,10 +205,10 @@ void GGPAD::stopCurrentBinding()
 {
     Binding* binding = m_guiModel.currentSelection();
     if ( binding ) {
-        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, __LINE__, binding );
+        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__, binding );
         binding->stop();
     } else {
-        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, __LINE__ );
+        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__ );
     }
 }
 
