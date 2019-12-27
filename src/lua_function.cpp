@@ -30,25 +30,37 @@ Function::Function( vm_type* vm, const char* funcName ) noexcept
 
 Function::operator bool () const
 {
-    return m_vm && m_funcName && getFunc();
+    if ( !m_vm || !m_funcName ) {
+        return false;
+    }
+    const bool ret = getFunc();
+    lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
+    lua_pop( vm, 1 );
+    const int stackCount = lua_gettop( vm );
+    assert( stackCount == 0 );
+    return ret;
 }
 
 bool Function::getFunc() const
 {
     assert( m_vm );
     assert( m_funcName );
-    return lua_getglobal( reinterpret_cast<lua_State*>( m_vm ), m_funcName ) == LUA_TFUNCTION;
+    lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
+    const int ret = lua_getglobal( vm, m_funcName );
+    return ret == LUA_TFUNCTION;
 }
 
 bool Function::call( int num )
 {
     assert( m_vm );
     lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
-    const bool ret = lua_pcall( vm, num, 0, 0 ) == LUA_OK;
-    if ( !ret ) {
+    const int ret = lua_pcall( vm, num, 0, 0 );
+    if ( ret != LUA_OK ) {
         LOG( LOG_ERROR, "%s\n", lua_tostring( vm, -1 ) );
     }
-    return ret;
+    const int stackCount = lua_gettop( vm );
+    assert( stackCount == 0 );
+    return ret == LUA_OK;
 }
 
 void Function::push_arg( short v )
