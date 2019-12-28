@@ -23,16 +23,6 @@
 #include <cstdlib>
 #include <fstream>
 
-
-static void* l_alloc( void*, void* ptr, std::size_t, std::size_t nsize )
-{
-    if ( !nsize ) {
-        std::free( ptr );
-        return 0;
-    }
-    return std::realloc( ptr, nsize );
-}
-
 namespace lua {
 
 enum Address : int {
@@ -40,21 +30,26 @@ enum Address : int {
     , eValue = -1
 };
 
-Script::Script()
-: m_vm( lua_newstate( l_alloc, 0 ), lua_close )
+Script::Script() noexcept
 {
-    luaL_openlibs( m_vm.get() );
+    m_vm = lua_newstate( &Allocator::luaRealloc, &m_allocator );
+    luaL_openlibs( m_vm );
+}
+
+Script::~Script() noexcept
+{
+    lua_close( m_vm );
 }
 
 void Script::bindTable( const char* a_name, const std::vector<Script::Record>& a_table )
 {
     assert( m_vm );
-    lua_newtable( m_vm.get() );
+    lua_newtable( m_vm );
     for ( const Script::Record& it : a_table ) {
-        lua_pushinteger( m_vm.get(), it.value );
-        lua_setfield( m_vm.get(), Address::eKey, it.name );
+        lua_pushinteger( m_vm, it.value );
+        lua_setfield( m_vm, Address::eKey, it.name );
     }
-    lua_setglobal( m_vm.get(), a_name );
+    lua_setglobal( m_vm, a_name );
 }
 
 void Script::doFile( const char* a_fileName )
@@ -67,9 +62,9 @@ void Script::doFile( const char* a_fileName )
     ifs.read( m_text.data(), m_text.size() );
     ifs.close();
     m_text.back() = 0;
-    const bool ret = luaL_dostring( m_vm.get(), m_text.c_str() ) == LUA_OK;
+    const bool ret = luaL_dostring( m_vm, m_text.c_str() ) == LUA_OK;
     if ( !ret ) {
-        LOG( LOG_ERROR, "%s", lua_tostring( m_vm.get(), Address::eValue ) );
+        LOG( LOG_ERROR, "%s", lua_tostring( m_vm, Address::eValue ) );
     }
 }
 
@@ -80,7 +75,7 @@ const std::string& Script::text() const
 
 Script::Function Script::operator [] ( std::string_view name )
 {
-    return Script::Function( reinterpret_cast<lua::vm_type*>( m_vm.get() ), name.data() );
+    return Script::Function( reinterpret_cast<lua::vm_type*>( m_vm ), name.data() );
 }
 
 static Script::Variant getFromStack( Script::vm_type* vm, int idx )
@@ -98,16 +93,16 @@ static Script::Variant getFromStack( Script::vm_type* vm, int idx )
 std::vector<Script::Pair> Script::getTable( const char* name )
 {
     std::vector<Script::Pair> v;
-    lua_getglobal( m_vm.get(), name );
-    if ( !lua_istable( m_vm.get(), Address::eValue ) ) {
+    lua_getglobal( m_vm, name );
+    if ( !lua_istable( m_vm, Address::eValue ) ) {
         return v;
     }
 
-    lua_pushnil( m_vm.get() );
-    while ( lua_next( m_vm.get(), Address::eKey ) ) {
+    lua_pushnil( m_vm );
+    while ( lua_next( m_vm, Address::eKey ) ) {
         v.emplace_back(
-            getFromStack( m_vm.get(), Address::eKey ),
-            getFromStack( m_vm.get(), Address::eValue )
+            getFromStack( m_vm, Address::eKey ),
+            getFromStack( m_vm, Address::eValue )
         );
         pop();
     }
@@ -116,7 +111,7 @@ std::vector<Script::Pair> Script::getTable( const char* name )
 
 void Script::registerFunction( const char* name, callback_type cb )
 {
-    lua_register( m_vm.get(), name, cb );
+    lua_register( m_vm, name, cb );
 }
 
 int Script::stackCount( vm_type* vm )
@@ -138,7 +133,12 @@ bool Script::get<bool>( vm_type* vm, std::size_t n )
 
 void Script::pop()
 {
-    lua_pop( m_vm.get(), 1 );
+    lua_pop( m_vm, 1 );
+}
+
+std::size_t Script::memoryUsage() const
+{
+    return m_allocator.totalUsage();
 }
 
 } // namespace lua

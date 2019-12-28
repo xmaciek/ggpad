@@ -30,6 +30,7 @@ set( link_libraries
 )
 
 set( sources
+    allocator.cpp
     barrier.cpp
     binding.cpp
     ggpad.cpp

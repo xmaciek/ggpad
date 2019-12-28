@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "allocator.hpp"
 #include <memory>
 #include <string>
 #include <variant>
@@ -35,7 +36,8 @@ public:
     using callback_type = int(*)(vm_type*);
 
 private:
-    std::unique_ptr<vm_type, void(*)(vm_type*)> m_vm;
+    Allocator m_allocator;
+    vm_type* m_vm = nullptr;
     std::string m_text;
 
     static int stackCount( vm_type* );
@@ -56,7 +58,8 @@ public:
         int value;
     } Record;
 
-    Script();
+    ~Script() noexcept;
+    Script() noexcept;
 
     void doFile( const char* a_fileName );
     const std::string& text() const;
@@ -67,6 +70,8 @@ public:
     Function operator [] ( std::string_view );
 
     void registerFunction( const char*, callback_type );
+
+    size_t memoryUsage() const;
 
     template <typename FUNC_TYPE, FUNC_TYPE FUNC, typename ARG0, typename ARG1>
     static int facade( vm_type* vm )
