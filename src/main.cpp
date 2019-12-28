@@ -14,7 +14,10 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include <QApplication>
+
 #include "ggpad.hpp"
+
+#include <functional>
 
 int main( int argc, char** argv )
 {
@@ -24,7 +27,7 @@ int main( int argc, char** argv )
     GGPAD ggpad;
     std::thread ex( &GGPAD::exec, &ggpad );
 
-    QObject::connect( &app, &QApplication::aboutToQuit, [&](){ ggpad.quit(); } );
+    QObject::connect( &app, &QApplication::aboutToQuit, std::bind( &GGPAD::quit, &ggpad ) );
 
     const int ret = app.exec();
     ex.join();
