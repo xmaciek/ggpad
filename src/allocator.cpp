@@ -1,4 +1,4 @@
-// GGPAD Copyright 2019 Maciej Latocha
+﻿// GGPAD Copyright 2019 Maciej Latocha
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 
 #include "allocator.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 
@@ -38,19 +39,21 @@ void Allocator::deallocate( Allocator::value_type* ptr, Allocator::size_type siz
 void* Allocator::luaRealloc( void* context, void* ptr, Allocator::size_type oldSize, Allocator::size_type newSize ) noexcept
 {
     Allocator* allocator = reinterpret_cast<Allocator*>( context );
+    if ( !ptr ) {
+        return allocator->allocate( newSize );
+    }
+
     value_type* data = reinterpret_cast<value_type*>( ptr );
     if ( newSize == 0 ) {
         allocator->deallocate( data, oldSize );
         return nullptr;
     }
 
-    if ( !ptr ) {
-        return allocator->allocate( newSize );
-    }
-
-    allocator->m_totalUsage -= oldSize;
-    allocator->m_totalUsage += newSize;
-    return std::realloc( ptr, newSize );
+    value_type* newData = allocator->allocate( newSize );
+    assert( sizeof( value_type ) == 1 ); // sanity check for ptr arithmetic
+    std::copy( data, data + std::min( oldSize, newSize ), newData );
+    allocator->deallocate( data, oldSize );
+    return newData;
 }
 
 Allocator::difference_type Allocator::totalUsage() const
