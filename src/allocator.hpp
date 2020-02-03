@@ -18,7 +18,9 @@
 #include "macros.hpp"
 
 #include <cstdint>
+#include <map>
 #include <type_traits>
+#include <vector>
 
 class Allocator {
     DISABLE_COPY( Allocator );
@@ -31,6 +33,7 @@ public:
 
 private:
     difference_type m_totalUsage = 0;
+    std::map<size_t,size_t> m_blockUsage;
 
 public:
     ~Allocator() noexcept;
@@ -39,6 +42,7 @@ public:
     void deallocate( value_type*, size_type ) noexcept;
 
     difference_type totalUsage() const;
+    std::vector<std::pair<size_t, size_t>> usage() const;
 
     static void* luaRealloc( void* context, void* ptr, size_type oldSize, size_type newSize ) noexcept;
 
