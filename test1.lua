@@ -18,7 +18,7 @@ mouse.dy = 0
 
 local mapping2 = {}
 mapping2[ Gamepad.LX ] = function( a_value ) mouse.dx = 400 * a_value / 0x7fff end
-mapping2[ Gamepad.LY ] = function( a_value ) mouse.dy = 400 * -a_value / 0x7fff end
+mapping2[ Gamepad.LY ] = function( a_value ) mouse.dy = 400 * a_value / 0x7fff end
 
 
 function GGPAD_event( a_btn, a_value )
