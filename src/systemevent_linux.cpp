@@ -60,6 +60,15 @@ bool createDevice( int32_t uinput, const uinput_user_dev* device )
     return ::ioctl( uinput, UI_DEV_CREATE ) == 0;
 }
 
+void flush( int32_t uinput )
+{
+    ::input_event ev{};
+    ev.type = EV_SYN;
+    ev.code = SYN_REPORT;
+    ::gettimeofday( &ev.time, 0 );
+    ::write( uinput, &ev, sizeof( ev ) );
+}
+
 } // namespace
 
 SystemEventLinux::SystemEventLinux()
@@ -98,9 +107,6 @@ SystemEventLinux::SystemEventLinux()
         LOG( LOG_DEBUG, "OK" );
     }
 
-    m_flush.type = EV_SYN;
-    m_flush.code = SYN_REPORT;
-    m_flush.value = 0;
 }
 
 SystemEventLinux::~SystemEventLinux()
@@ -125,10 +131,9 @@ void SystemEventLinux::sendEvent( uint32_t type, uint32_t code, int32_t value )
     ::gettimeofday( &event.time, 0 );
     const int written = ::write( m_uinput, &event, sizeof( input_event ) );
     assert( written == sizeof( input_event ) );
-
-    ::gettimeofday( &m_flush.time, 0 );
-    ::write( m_uinput, &m_flush, sizeof( input_event ) );
+    flush( m_uinput );
 }
+
 
 void SystemEventLinux::keyboard( uint32_t key, bool state )
 {

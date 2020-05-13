@@ -15,27 +15,27 @@
 
 #pragma once
 
-#include <linux/input.h>
-#include <linux/uinput.h>
-
 #include "macros.hpp"
-#include "systemevent.hpp"
 
-class SystemEventLinux : public SystemEvent {
+#include <cstdint>
+
+// TODO: shady forward include for enum macro expansion, use custom translation values instead
+#include <linux/input-event-codes.h>
+
+class SystemEventLinux {
     DISABLE_COPY( SystemEventLinux )
 
 private:
     int32_t m_uinput = 0;
-    ::input_event m_flush{};
 
     bool isValid() const;
     void sendEvent( uint32_t a_type, uint32_t a_code, int32_t a_value );
 
 public:
     SystemEventLinux();
-    virtual ~SystemEventLinux();
+    ~SystemEventLinux();
 
-    virtual void keyboard( uint32_t a_key, bool a_state ) override;
-    virtual void mouseMove( int32_t a_deltaX, int32_t a_deltaY ) override;
+    void keyboard( uint32_t a_key, bool a_state );
+    void mouseMove( int32_t a_deltaX, int32_t a_deltaY );
 
 };

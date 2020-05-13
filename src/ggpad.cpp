@@ -22,7 +22,6 @@
 #include "gui_controller_model.hpp"
 #include "log.hpp"
 #include "watcher_udev.hpp"
-#include "systemevent_linux.hpp"
 
 
 static const std::vector<Script::Record> GAMEPAD_TABLE {
@@ -56,7 +55,7 @@ GGPAD::GGPAD()
         s_instance = this;
     }
     m_gui = std::make_unique<Gui>( &m_guiModel );
-    m_systemEvent = std::make_unique<SystemEventLinux>();
+    m_systemEvent = std::make_unique<SystemEvent>();
     m_deviceWatcher = std::make_unique<WatcherUDev>();
     m_gui->setSaveCb( std::bind( &GGPAD::saveCurrentBinding, this ) );
     m_gui->setRunCb( std::bind( &GGPAD::runCurrentBinding, this ) );

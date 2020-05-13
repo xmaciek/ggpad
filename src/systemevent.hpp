@@ -15,17 +15,5 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "macros.hpp"
-
-class SystemEvent {
-    DISABLE_COPY( SystemEvent )
-
-public:
-    SystemEvent() = default;
-    virtual ~SystemEvent() = default;
-
-    virtual void keyboard( uint32_t a_key, bool a_state ) = 0;
-    virtual void mouseMove( int32_t a_deltaX, int32_t a_deltaY ) = 0;
-};
+#include "systemevent_linux.hpp"
+using SystemEvent = SystemEventLinux;
