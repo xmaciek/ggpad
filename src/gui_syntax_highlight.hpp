@@ -25,10 +25,10 @@ class SyntaxHighlight : public QSyntaxHighlighter {
     Q_OBJECT
 
 private:
-    using Pair = struct {
+    struct Pair {
         QRegularExpression m_pattern;
         QTextCharFormat m_format;
-        std::size_t m_offset;
+        std::size_t m_offset = 0;
     };
     std::vector<Pair> m_matchPairs;
 

@@ -37,14 +37,14 @@ public:
 
 
     typedef struct [[gnu::packed]] {
-        Button button;
-        value_type value;
+        Button button{};
+        value_type value{};
         constexpr static value_type min() { return std::numeric_limits<value_type>::min() + 1; }
         constexpr static value_type max() { return std::numeric_limits<value_type>::max(); }
         // native representation
-        int16_t _type;
-        int16_t _code;
-        int32_t _value;
+        int16_t _type{};
+        int16_t _code{};
+        int32_t _value{};
     } Event;
 
     Gamepad() = default;

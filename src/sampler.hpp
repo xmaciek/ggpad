@@ -32,7 +32,7 @@ public:
 
 private:
     static_assert( TCount > 1, "Capacity of cycling buffer is too small, expected > 1" );
-    std::array<clock_type::duration, TCount> m_samples = {};
+    std::array<clock_type::duration, TCount> m_samples{};
 
 public:
     ~Sampler() noexcept = default;

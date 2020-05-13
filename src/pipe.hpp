@@ -15,19 +15,25 @@
 
 #pragma once
 
+#include "macros.hpp"
+
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <memory>
 #include <optional>
 #include <utility>
 
 template <typename T>
 class Pipe {
+    DISABLE_COPY( Pipe );
+
     enum Channel : int {
         eRead = 0
         , eWrite = 1
         , eMAX = 2
     };
-    int m_pipe[ Channel::eMAX ] = { 0, 0 };
+    int m_pipe[ Channel::eMAX ]{};
 
 public:
     using value_type = T;
@@ -47,18 +53,19 @@ public:
     template <class... ARGS>
     void emplace( ARGS&&... args )
     {
-        uint8_t buffer[ sizeof( value_type ) ];
+        alignas( alignof( value_type ) ) uint8_t buffer[ sizeof( value_type ) ];
         new ( buffer ) value_type( std::forward<ARGS>( args )... );
-        const bool ok = ::write( m_pipe[ Channel::eWrite ], buffer, sizeof( value_type ) ) != -1;
+
+        const bool ok = ::write( m_pipe[ Channel::eWrite ], buffer, sizeof( value_type ) ) < 0;
         if ( !ok ) {
-            reinterpret_cast<value_type*>( buffer )->~value_type();
+            std::destroy_at<value_type>( reinterpret_cast<value_type*>( buffer ) );
         }
     }
 
     std::optional<value_type> pop()
     {
-        uint8_t buffer[ sizeof( value_type ) ];
-        const bool ok = ::read( m_pipe[ Channel::eRead ], buffer, sizeof( value_type ) ) != -1;
+        alignas( alignof( value_type ) ) uint8_t buffer[ sizeof( value_type ) ];
+        const bool ok = ::read( m_pipe[ Channel::eRead ], buffer, sizeof( value_type ) ) < 0;
         return ok
             ? std::move( *reinterpret_cast<value_type*>( buffer ) )
             : std::optional<value_type>();

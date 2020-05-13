@@ -26,7 +26,7 @@ class SystemEventLinux : public SystemEvent {
 
 private:
     int32_t m_uinput = 0;
-    ::input_event m_flush = { 0 };
+    ::input_event m_flush{};
 
     bool isValid() const;
     void sendEvent( uint32_t a_type, uint32_t a_code, int32_t a_value );

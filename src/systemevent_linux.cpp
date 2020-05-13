@@ -83,7 +83,7 @@ SystemEventLinux::SystemEventLinux()
         LOG( LOG_DEBUG, "OK" );
     }
 
-    ::uinput_user_dev virtualDevice = { 0 };
+    ::uinput_user_dev virtualDevice{};
     std::strcpy( virtualDevice.name, "GGPAD-virtual-input-device" );
     virtualDevice.id.bustype = BUS_USB;
     virtualDevice.id.vendor  = 0x1234;
@@ -118,7 +118,7 @@ void SystemEventLinux::sendEvent( uint32_t type, uint32_t code, int32_t value )
         LOG( LOG_ERROR, "<font color=\"red\">Unable to send system event</font>" )
         return;
     }
-    input_event event = { 0 };
+    input_event event{};
     event.type = type;
     event.code = code;
     event.value = value;

@@ -32,7 +32,7 @@ private:
     int m_fd = -1;
     uint32_t m_vidpid = 0;
     IdCounter m_uid;
-    state_type m_state = { 0 };
+    state_type m_state{};
     TableInfo m_tableInfo;
     std::string m_displayName;
 

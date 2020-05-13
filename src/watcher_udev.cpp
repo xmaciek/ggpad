@@ -30,7 +30,9 @@ namespace {
 // waits up to 10ms for event
 bool waitForEvent( int fd )
 {
-    pollfd p = { .fd = fd, .events = POLLIN };
+    ::pollfd p{};
+    p.fd = fd;
+    p.events = POLLIN;
     return ::poll( &p, 1, 10 ) > 0;
 }
 
