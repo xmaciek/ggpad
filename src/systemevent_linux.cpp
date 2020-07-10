@@ -16,6 +16,7 @@
 #include "systemevent_linux.hpp"
 
 #include <cassert>
+#include <cerrno>
 #include <cstring>
 
 #include <fcntl.h>

@@ -82,7 +82,7 @@ static Script::Variant getFromStack( Script::vm_type* vm, int idx )
 {
     switch ( lua_type( vm, idx ) ) {
         case LUA_TNUMBER:
-            return Script::Variant( lua_tonumber( vm, idx ) );
+            return Script::Variant( (int64_t)lua_tonumber( vm, idx ) );
         case LUA_TSTRING:
             return Script::Variant( lua_tostring( vm, idx ) );
         default:

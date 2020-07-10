@@ -17,6 +17,7 @@
 
 #include <array>
 #include <cstdlib>
+#include <cstdio>
 
 class Log {
 public:
