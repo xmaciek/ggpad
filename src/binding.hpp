@@ -18,7 +18,7 @@
 #include "barrier.hpp"
 #include "gamepad.hpp"
 #include "macros.hpp"
-#include "pipe.hpp"
+#include "queue.hpp"
 #include "script.hpp"
 
 #include <condition_variable>
@@ -31,7 +31,7 @@ class Binding {
     DISABLE_COPY( Binding );
     void* m_editor = nullptr;
 
-    Pipe<Gamepad::Event> m_queue;
+    Queue<Gamepad::Event> m_queue;
     std::thread m_pollThread;
 
     Barrier m_scriptBarrier;
