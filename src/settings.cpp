@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 
@@ -26,10 +27,17 @@
 
 static std::filesystem::path settingsDir()
 {
-    const char* home = std::getenv( "HOME" );
-    assert( home );
-    std::filesystem::path path = home ? home : ".";
-    path /= ".config";
+    std::filesystem::path path{};
+    const char* settingsDir = std::getenv( "XDG_CONFIG_HOME" );
+    if ( settingsDir && std::strlen( settingsDir ) > 0 ) {
+        path = settingsDir;
+    }
+    else {
+        settingsDir = std::getenv( "HOME" );
+        assert( settingsDir );
+        path = settingsDir ? settingsDir : ".";
+        path /= ".config";
+    }
     path /= "ggpad";
     return path;
 }
@@ -41,7 +49,7 @@ static std::filesystem::path settingsFile()
 
 Settings::Settings()
 {
-    std::filesystem::path filePath = settingsFile();
+    const std::filesystem::path filePath = settingsFile();
     if ( !std::filesystem::exists( filePath ) ) {
         LOG( LOG_ERROR, "Unable to read settings file %s\n", filePath.c_str() );
         return;
