@@ -160,6 +160,8 @@ int GGPAD::exec()
 
         for ( Binding::Ptr& ptr : m_list ) {
             dirty |= ptr->connectionStateChanged();
+            // delay in gui will be visible since update goes once per second
+            dirty |= ptr->scriptStateChanged();
         }
 
         if ( dirty ) {
@@ -199,7 +201,6 @@ void GGPAD::runCurrentBinding()
     Binding* binding = m_guiModel.currentSelection();
     if ( binding ) {
         LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__, binding );
-        binding->stop();
         binding->run();
     } else {
         LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__ );

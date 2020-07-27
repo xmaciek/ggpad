@@ -33,18 +33,20 @@ class Binding {
     void* m_editor = nullptr;
 
     Queue<Gamepad::Event> m_queue;
-    std::thread m_pollThread;
-
-    Barrier m_scriptBarrier;
+    std::optional<std::thread> m_pollThread;
+    std::optional<std::thread> m_updateThread;
+    std::optional<std::thread> m_eventThread;
+    std::mutex m_threadOperation;
     std::mutex m_mutexScript;
-    std::thread m_updateThread;
-    std::thread m_eventThread;
+    Barrier m_scriptBarrier;
+
     std::filesystem::path m_currentScriptFile;
 
     std::unique_ptr<Gamepad> m_gamepad;
     std::string m_gamepadName;
 
     bool m_lastGamepadConnectionState = false;
+    bool m_lastScriptState = false;
 
     void pollLoop();
     void eventLoop();
@@ -73,8 +75,10 @@ public:
     void stopPoll();
     void stop();
 
-    std::string gamepadName() const;
     bool connectionStateChanged();
+    bool scriptStateChanged();
+    std::string gamepadName() const;
+    std::string scriptStatusAsText() const;
 
     void startScript();
     void startPoll();

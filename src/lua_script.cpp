@@ -62,8 +62,8 @@ void Script::doFile( const char* a_fileName )
     ifs.read( m_text.data(), m_text.size() );
     ifs.close();
     m_text.back() = 0;
-    const bool ret = luaL_dostring( m_vm, m_text.c_str() ) == LUA_OK;
-    if ( !ret ) {
+    setErrorCode( luaL_dostring( m_vm, m_text.c_str() ) );
+    if ( errorCode() != LUA_OK ) {
         LOG( LOG_ERROR, "%s", lua_tostring( m_vm, Address::eValue ) );
     }
 }
@@ -139,6 +139,21 @@ void Script::pop()
 std::size_t Script::memoryUsage() const
 {
     return m_allocator.totalUsage();
+}
+
+void Script::setErrorCode( int ec )
+{
+    m_lastErrorCode = ec;
+}
+
+int Script::errorCode() const
+{
+    return m_lastErrorCode;
+}
+
+bool Script::hasError() const
+{
+    return m_lastErrorCode != LUA_OK;
 }
 
 } // namespace lua

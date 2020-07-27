@@ -27,7 +27,7 @@ private:
     const char* m_funcName = nullptr;
 
     bool getFunc() const;
-    bool call( int );
+    int call( int );
 
 
     template <typename T>
@@ -65,10 +65,14 @@ public:
     Function( vm_type*, const char* ) noexcept;
     operator bool () const;
 
+    // TODO: this should return std::error_code
     template <class... ARGS>
-    void operator () ( ARGS&&... args )
+    int operator () ( ARGS&&... args )
     {
-        getFunc() && call( push( std::forward<ARGS>( args )... ) );
+        if ( getFunc() ) {
+            return call( push( std::forward<ARGS>( args )... ) );
+        }
+        return -1;
     }
 
 };

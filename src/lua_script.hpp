@@ -40,12 +40,15 @@ private:
     vm_type* m_vm = nullptr;
     std::string m_text;
 
+    int m_lastErrorCode = 0;
     static int stackCount( vm_type* );
 
     template <typename T>
     static T get( vm_type*, std::size_t );
 
     void pop();
+
+    int errorCode() const;
 
 public:
     using Function = lua::Function;
@@ -85,6 +88,9 @@ public:
         );
         return 1;
     }
+
+    void setErrorCode( int );
+    bool hasError() const;
 };
 
 } // namespace lua

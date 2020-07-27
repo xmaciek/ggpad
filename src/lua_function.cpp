@@ -50,7 +50,7 @@ bool Function::getFunc() const
     return ret == LUA_TFUNCTION;
 }
 
-bool Function::call( int num )
+int Function::call( int num )
 {
     assert( m_vm );
     lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
@@ -60,7 +60,7 @@ bool Function::call( int num )
     }
     const int stackCount = lua_gettop( vm );
     assert( stackCount == 0 );
-    return ret == LUA_OK;
+    return ret;
 }
 
 void Function::push_arg( short v )

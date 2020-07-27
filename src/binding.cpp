@@ -55,7 +55,9 @@ void Binding::pollLoop()
         if ( events.empty() ) {
             continue;
         }
-        // ignore events when script is not running to avoid event pilling up
+        // Ignore events when script is not running to avoid event pilling up on binding side.
+        // The device should still be polling as nothing happened. There might be internal buffer (linux has)
+        // which we don't want to process when script has been launched.
         if ( !m_isRunningScript.load() ) {
             continue;
         }
@@ -72,13 +74,19 @@ void Binding::eventLoop()
     std::optional<Gamepad::Event> ev;
     while ( m_isRunningScript.load() ) {
         m_scriptBarrier.wait_for( 5ms );
+
         while ( m_isRunningScript.load() && ( ev = m_queue.pop() ) ) {
             const Gamepad::Event& it = *ev;
-            LockGuard lg( m_mutexScript );
-            if ( m_nativeEventFunc ) {
-                m_nativeEventFunc( it._type, it._code, it._value );
-            } else if ( m_eventFunc ) {
-                m_eventFunc( (int)it.button, it.value );
+            {
+                LockGuard lg( m_mutexScript );
+                if ( m_nativeEventFunc ) {
+                    m_script->setErrorCode( m_nativeEventFunc( it._type, it._code, it._value ) );
+                } else if ( m_eventFunc ) {
+                    m_script->setErrorCode( m_eventFunc( (int)it.button, it.value ) );
+                }
+            }
+            if ( m_script && m_script->hasError() ) {
+                stopScript();
             }
         }
     }
@@ -105,6 +113,11 @@ std::string Binding::gamepadName() const
     return m_gamepadName + status;
 }
 
+std::string Binding::scriptStatusAsText() const
+{
+    return m_isRunningScript.load() ? "Running" : "Not Running";
+}
+
 bool Binding::connectionStateChanged()
 {
     const bool currentConnectionState = m_gamepad && m_gamepad->isConnected();
@@ -120,6 +133,13 @@ bool Binding::connectionStateChanged()
     return true;
 }
 
+bool Binding::scriptStateChanged()
+{
+    const bool oldState = m_lastScriptState;
+    m_lastScriptState = m_isRunningScript.load();
+    return oldState != m_lastScriptState;
+}
+
 void Binding::stop()
 {
     stopPoll();
@@ -128,40 +148,51 @@ void Binding::stop()
 
 void Binding::stopScript()
 {
+    std::lock_guard<std::mutex> lg( m_threadOperation );
     m_isRunningScript.store( false );
-    if ( m_eventThread.joinable() ) {
-        m_eventThread.join();
+    if ( m_eventThread && m_eventThread->joinable() ) {
+        m_eventThread->join();
     }
-    if ( m_updateThread.joinable() ) {
-        m_updateThread.join();
+    m_eventThread.reset();
+
+    if ( m_updateThread && m_updateThread->joinable() ) {
+        m_updateThread->join();
     }
+    m_updateThread.reset();
 }
 
 void Binding::stopPoll()
 {
+    std::lock_guard<std::mutex> lg( m_threadOperation );
     m_isRunning.store( false );
-    if ( m_pollThread.joinable() ) {
-        m_pollThread.join();
+    if ( m_pollThread && m_pollThread->joinable() ) {
+        m_pollThread->join();
     }
+    m_pollThread.reset();
 }
 
 void Binding::startScript()
 {
+    std::lock_guard<std::mutex> lg( m_threadOperation );
     bool expected = false;
     if ( !m_isRunningScript.compare_exchange_weak( expected, true ) ) {
         return;
     }
-    m_eventThread = std::thread( &Binding::eventLoop, this );
-    m_updateThread = std::thread( &Binding::updateLoop, this );
+    assert( !m_eventThread );
+    assert( !m_updateThread );
+    m_eventThread.emplace( &Binding::eventLoop, this );
+    m_updateThread.emplace( &Binding::updateLoop, this );
 }
 
 void Binding::startPoll()
 {
+    std::lock_guard<std::mutex> lg( m_threadOperation );
     bool expected = false;
     if ( !m_isRunning.compare_exchange_weak( expected, true ) ) {
         return;
     }
-    m_pollThread = std::thread( &Binding::pollLoop, this );
+    assert( !m_pollThread );
+    m_pollThread.emplace( &Binding::pollLoop, this );
 
 }
 
