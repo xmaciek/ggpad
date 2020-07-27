@@ -26,7 +26,7 @@ class Queue {
     DISABLE_COPY( Queue );
 
     std::mutex m_mutex;
-    std::list<T> m_list{};
+    std::list<T> m_list;
 
 public:
     using value_type = T;
@@ -47,5 +47,11 @@ public:
         std::optional<value_type> tmp = m_list.front();
         m_list.pop_front();
         return tmp;
+    }
+
+    void clear()
+    {
+        std::lock_guard<std::mutex> lock( m_mutex );
+        m_list.clear();
     }
 };
