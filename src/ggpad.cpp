@@ -74,9 +74,9 @@ GGPAD::~GGPAD()
 
 static Binding::Ptr& bindingForGamepad( Gamepad* a_gamepad, GGPAD::BindList* a_bindList )
 {
-    for ( GGPAD::BindList::iterator it = a_bindList->begin(); it != a_bindList->end(); ++it ) {
-        if ( (*it)->m_gamepadId == a_gamepad->uid() ) {
-            return *it;
+    for ( Binding::Ptr& it : *a_bindList ) {
+        if ( it->m_gamepadId == a_gamepad->uid() ) {
+            return it;
         }
     }
     a_bindList->push_back( std::make_unique<Binding>() );
@@ -84,14 +84,12 @@ static Binding::Ptr& bindingForGamepad( Gamepad* a_gamepad, GGPAD::BindList* a_b
 
 }
 
-static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
+static void setScriptForGamepad( Binding* binding, const std::string& a_scriptFile )
 {
-    if ( !ptr ) {
+    if ( !binding ) {
         LOG( LOG_DEBUG, "Gamepad not selected" );
         return;
     }
-
-    ptr->stop();
 
     if ( !std::filesystem::exists( a_scriptFile ) ) {
         LOG( LOG_ERROR, "Script file not found: %s", a_scriptFile.c_str() );
@@ -108,15 +106,17 @@ static void setScriptForGamepad( Binding* ptr, const std::string& a_scriptFile )
     script->registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
 
     script->doFile( a_scriptFile.c_str() );
-    ptr->setScript( script );
+
+    binding->stopScript();
+    binding->setCurrentScriptFile( a_scriptFile );
+    binding->setScript( script );
+    binding->discardEventQueue();
 }
 
 static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
 {
     Binding::Ptr& ptr = bindingForGamepad( a_gamepad, a_bindList );
-    ptr->m_gamepadId = a_gamepad->uid();
-    ptr->m_gamepad = a_gamepad;
-    ptr->m_gamepadName = a_gamepad->displayName();
+    ptr->setGamepad( a_gamepad );
     setScriptForGamepad( ptr.get(), a_scriptFile );
     ptr->run();
 }
@@ -159,7 +159,7 @@ int GGPAD::exec()
         }
 
         for ( Binding::Ptr& ptr : m_list ) {
-            dirty |= ptr->stopIfNeeded();
+            dirty |= ptr->connectionStateChanged();
         }
 
         if ( dirty ) {
@@ -185,6 +185,12 @@ void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
 
 void GGPAD::saveCurrentBinding()
 {
+    Binding* binding = m_guiModel.currentSelection();
+    if ( !binding ) {
+        LOG( LOG_DEBUG, "Nothing to save" );
+        return;
+    }
+
     LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
 }
 

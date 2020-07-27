@@ -24,19 +24,13 @@ using namespace std::chrono_literals;
 Binding::~Binding()
 {
     stop();
-    delete m_gamepad;
     delete m_script;
 }
 
 void Binding::run()
 {
-    if ( m_isRunning ) {
-        return;
-    }
-    m_isRunning = true;
-    m_pollThread = std::thread( &Binding::pollLoop, this );
-    m_eventThread = std::thread( &Binding::eventLoop, this );
-    m_updateThread = std::thread( &Binding::updateLoop, this );
+    startScript();
+    startPoll();
 }
 
 void Binding::updateLoop()
@@ -46,7 +40,7 @@ void Binding::updateLoop()
     }
     assert( m_script );
     const double deltaTime = 5.0 / 1000;
-    while ( m_isRunning ) {
+    while ( m_isRunningScript.load() ) {
         std::this_thread::sleep_for( 5ms );
         LockGuard lockGuard( m_mutexScript );
         m_updateFunc( deltaTime );
@@ -56,15 +50,19 @@ void Binding::updateLoop()
 void Binding::pollLoop()
 {
     assert( m_gamepad );
-    while ( m_isRunning ) {
+    while ( m_isRunning.load() ) {
         std::list<Gamepad::Event> events = m_gamepad->pollChanges();
         if ( events.empty() ) {
             continue;
         }
+        // ignore events when script is not running to avoid event pilling up
+        if ( !m_isRunningScript.load() ) {
+            continue;
+        }
         for ( const Gamepad::Event& it : events ) {
             m_queue.emplace( it );
+            m_scriptBarrier.notify();
         }
-        m_scriptBarrier.notify();
     }
 
 }
@@ -72,9 +70,9 @@ void Binding::pollLoop()
 void Binding::eventLoop()
 {
     std::optional<Gamepad::Event> ev;
-    while ( m_isRunning ) {
+    while ( m_isRunningScript.load() ) {
         m_scriptBarrier.wait_for( 5ms );
-        while ( m_isRunning && ( ev = m_queue.pop() ) ) {
+        while ( m_isRunningScript.load() && ( ev = m_queue.pop() ) ) {
             const Gamepad::Event& it = *ev;
             LockGuard lg( m_mutexScript );
             if ( m_nativeEventFunc ) {
@@ -86,45 +84,91 @@ void Binding::eventLoop()
     }
 }
 
-std::string Binding::gamepadName() const
+
+void Binding::setGamepad( Gamepad* gamepad )
 {
-    return m_gamepadName + std::string( m_gamepad ? "" : " (disconnected)" );
+    assert( gamepad );
+    assert( !m_gamepad );
+    assert( !m_isRunning.load() );
+    m_gamepad.reset( gamepad );
+    m_gamepadId = m_gamepad->uid();
+    m_gamepadName = m_gamepad->displayName();
+
 }
 
-bool Binding::stopIfNeeded()
+std::string Binding::gamepadName() const
 {
-    if ( !m_isRunning ) {
+    // checking for ->isConnected() is kind of pointless,
+    // you either have gamepad object which is implicitly always connected or you don't.
+    const bool isConnected = m_gamepad && m_gamepad->isConnected();
+    const std::string status = isConnected ? std::string() : std::string( " (disconnected)" );
+    return m_gamepadName + status;
+}
+
+bool Binding::connectionStateChanged()
+{
+    const bool currentConnectionState = m_gamepad && m_gamepad->isConnected();
+    if ( currentConnectionState == m_lastGamepadConnectionState ) {
         return false;
     }
-    if ( m_gamepad && m_gamepad->isConnected() ) {
-        return false;
+    m_lastGamepadConnectionState = currentConnectionState;
+    // if gamepad disconnection is detected, we should get rid of it
+    if ( !currentConnectionState ) {
+        stopPoll();
+        m_gamepad.reset();
     }
-
-    stop();
-
-    delete m_gamepad;
-    m_gamepad = nullptr;
     return true;
 }
 
 void Binding::stop()
 {
-    m_isRunning = false;
+    stopPoll();
+    stopScript();
+}
 
+void Binding::stopScript()
+{
+    m_isRunningScript.store( false );
     if ( m_eventThread.joinable() ) {
         m_eventThread.join();
     }
     if ( m_updateThread.joinable() ) {
         m_updateThread.join();
     }
+}
+
+void Binding::stopPoll()
+{
+    m_isRunning.store( false );
     if ( m_pollThread.joinable() ) {
         m_pollThread.join();
     }
 }
 
+void Binding::startScript()
+{
+    bool expected = false;
+    if ( !m_isRunningScript.compare_exchange_weak( expected, true ) ) {
+        return;
+    }
+    m_eventThread = std::thread( &Binding::eventLoop, this );
+    m_updateThread = std::thread( &Binding::updateLoop, this );
+}
+
+void Binding::startPoll()
+{
+    bool expected = false;
+    if ( !m_isRunning.compare_exchange_weak( expected, true ) ) {
+        return;
+    }
+    m_pollThread = std::thread( &Binding::pollLoop, this );
+
+}
+
 void Binding::setScript( Script* sc )
 {
-    assert( !m_isRunning );
+    assert( sc );
+    assert( !m_isRunningScript.load() );
     delete m_script;
     m_script = sc;
     m_updateFunc = (*sc)[ "GGPAD_update" ];
@@ -140,4 +184,14 @@ void* Binding::editor() const
 void Binding::setEditor( void* e )
 {
     m_editor = e;
+}
+
+void Binding::setCurrentScriptFile( const std::filesystem::path& p )
+{
+    m_currentScriptFile = p;
+}
+
+void Binding::discardEventQueue()
+{
+    m_queue.clear();
 }

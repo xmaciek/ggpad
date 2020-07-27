@@ -21,7 +21,8 @@
 #include "queue.hpp"
 #include "script.hpp"
 
-#include <condition_variable>
+#include <atomic>
+#include <filesystem>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -38,6 +39,16 @@ class Binding {
     std::mutex m_mutexScript;
     std::thread m_updateThread;
     std::thread m_eventThread;
+    std::filesystem::path m_currentScriptFile;
+
+    std::unique_ptr<Gamepad> m_gamepad;
+    std::string m_gamepadName;
+
+    bool m_lastGamepadConnectionState = false;
+
+    void pollLoop();
+    void eventLoop();
+    void updateLoop();
 
 public:
     using Ptr = std::unique_ptr<Binding>;
@@ -47,26 +58,30 @@ public:
     Script::Function m_updateFunc;
     Script::Function m_eventFunc;
     Script::Function m_nativeEventFunc;
-    bool m_isRunning = false;
-    bool m_isRunningScript = false;
+    std::atomic_bool m_isRunning = false;
+    std::atomic_bool m_isRunningScript = false;
 
-    std::string m_gamepadName;
     uint64_t m_gamepadId = 0;
-    Gamepad* m_gamepad = nullptr;
     Script* m_script = nullptr;
 
     Binding() = default;
     ~Binding();
 
+    void setGamepad( Gamepad* );
     void run();
-    void pollLoop();
-    void eventLoop();
-    void updateLoop();
+    void stopScript();
+    void stopPoll();
+    void stop();
 
     std::string gamepadName() const;
-    bool stopIfNeeded();
-    void stop();
+    bool connectionStateChanged();
+
+    void startScript();
+    void startPoll();
+    void discardEventQueue();
 
     void* editor() const;
     void setEditor( void* );
+
+    void setCurrentScriptFile( const std::filesystem::path& );
 };
