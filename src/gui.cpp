@@ -123,6 +123,10 @@ void Gui::setUpdateCb( const std::function<void(const std::string&)>& foo )
 
 void Gui::onClickOpen()
 {
+    if ( !m_currentBinding ) {
+        LOG( LOG_DEBUG, "<font color=orange>No selection, this btn should be disabled</font>" );
+        return;
+    }
     QPointer<QFileDialog> ptr = new QFileDialog(
         this
         , "Open .lua script"
@@ -135,9 +139,18 @@ void Gui::onClickOpen()
     }
     QStringList fileNames = ptr->selectedFiles();
     ptr.clear();
+
     assert( m_updateScriptCb );
     for ( const QString& it : fileNames ) {
         m_updateScriptCb( it.toStdString() );
+        QTextEdit* editor = nullptr;
+        if ( m_currentBinding ) {
+            editor = reinterpret_cast<QTextEdit*>( m_currentBinding->editor() );
+        }
+        if ( editor ) {
+            assert( m_currentBinding->m_script );
+            editor->setText( m_currentBinding->m_script->text().c_str() );
+        }
     }
 }
 
@@ -151,6 +164,7 @@ static QTextEdit* createEditor( QWidget* parent )
 
 void Gui::selectionChanged( Binding* b )
 {
+    m_currentBinding = b;
     if ( !b ) {
         return;
     }

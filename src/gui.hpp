@@ -34,6 +34,7 @@ class Gui : public QMainWindow {
     Q_OBJECT
 
 private:
+    Binding* m_currentBinding = nullptr;
     QListView m_list;
     QStackedWidget m_editorStack;
 
