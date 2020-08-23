@@ -22,11 +22,13 @@
 #include <QPointer>
 #include <QStackedWidget>
 #include <QTextEdit>
+#include <QTimer>
 #include <QToolBar>
 
 #include <functional>
 #include <string>
 
+#include "comm.hpp"
 #include "gui_controller_model.hpp"
 #include "binding.hpp"
 
@@ -34,32 +36,34 @@ class Gui : public QMainWindow {
     Q_OBJECT
 
 private:
+    GuiControllerModel m_model{};
+    GuiControllerModel::GamepadInfo* m_currentInfo = nullptr;
     Binding* m_currentBinding = nullptr;
-    QListView m_list;
-    QStackedWidget m_editorStack;
+    QListView m_list{ this };
+    QStackedWidget m_editorStack{ this };
 
-    QToolBar m_toolbar;
+    QToolBar m_toolbar{ this };
     QPointer<QAction> m_actionOpen;
     QPointer<QAction> m_actionSave;
     QPointer<QAction> m_actionRun;
     QPointer<QAction> m_actionStop;
 
-    std::function<void()> m_openScriptCb;
-    std::function<void()> m_saveScriptCb;
-    std::function<void()> m_runScriptCb;
-    std::function<void()> m_stopScriptCb;
-    std::function<void( const std::string& )> m_updateScriptCb;
+    Comm* m_serverComm = nullptr;
+    QTimer m_timerServerMessages{ this };
+    void processServerMessages();
 
-    void selectionChanged( Binding* );
+    std::map<uint64_t, QTextEdit*> m_editorMapStack;
+    void selectionChanged( GuiControllerModel::GamepadInfo* );
 
-    void onClickOpen();
+private slots:
+    void onOpen();
+    void onSave();
+    void onRun();
+    void onStop();
+    void onUpdate();
 
 public:
-    Gui( ControllerModel* );
+    ~Gui();
+    Gui( Comm* );
 
-    void setOpenCb( const std::function<void()>& );
-    void setSaveCb( const std::function<void()>& );
-    void setRunCb( const std::function<void()>& );
-    void setStopCb( const std::function<void()>& );
-    void setUpdateCb( const std::function<void(const std::string&)>& );
 };

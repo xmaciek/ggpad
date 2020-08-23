@@ -13,13 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
 #include <chrono>
 #include <filesystem>
 #include <thread>
 
 #include "ggpad.hpp"
 #include "gamepad.hpp"
-#include "gui_controller_model.hpp"
 #include "log.hpp"
 #include "watcher_udev.hpp"
 
@@ -49,18 +49,15 @@ static const std::vector<Script::Record> MOUSE_TABLE {
 
 GGPAD* GGPAD::s_instance = nullptr;
 
-GGPAD::GGPAD()
+GGPAD::GGPAD( Comm* clientComm )
+: m_clientComm{ clientComm }
 {
     if ( !s_instance ) {
         s_instance = this;
     }
-    m_gui = std::make_unique<Gui>( &m_guiModel );
+    m_gui = std::make_unique<Gui>( clientComm );
     m_systemEvent = std::make_unique<SystemEvent>();
     m_deviceWatcher = std::make_unique<WatcherUDev>();
-    m_gui->setSaveCb( std::bind( &GGPAD::saveCurrentBinding, this ) );
-    m_gui->setRunCb( std::bind( &GGPAD::runCurrentBinding, this ) );
-    m_gui->setStopCb( std::bind( &GGPAD::stopCurrentBinding, this ) );
-    m_gui->setUpdateCb( std::bind( &GGPAD::openScript, this, std::placeholders::_1 ) );
 }
 
 GGPAD::~GGPAD()
@@ -126,53 +123,75 @@ void GGPAD::quit()
     m_isRunning = false;
 }
 
-static std::vector<Binding*> prepareViewList( const GGPAD::BindList& list )
-{
-    std::vector<Binding*> ret;
-    ret.reserve( list.size() );
-    for ( const GGPAD::BindList::value_type& it : list ) {
-        ret.emplace_back( it.get() );
-    }
-    return ret;
-}
-
 int GGPAD::exec()
 {
-    bool dirty = false;
+    m_threadClientMessages = std::thread( &GGPAD::processClientMessages, this );
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
-        dirty = true;
         pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
-    }
+        m_clientComm->pushToClient( Message{
+            m_settings[ it->uid() ]
+            , it->displayName()
+            , it->uid()
+            , Message::Type::eGamepadConnected
+            }
+        );
 
-    if ( dirty ) {
-        m_guiModel.refreshViews( prepareViewList( m_list ) );
     }
 
     while ( m_isRunning ) {
-        dirty = false;
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
-            dirty = true;
             pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
+            m_clientComm->pushToClient( Message{
+                m_settings[ it->uid() ]
+                , it->displayName()
+                , it->uid()
+                , Message::Type::eGamepadConnected
+                }
+            );
         }
 
         for ( Binding::Ptr& ptr : m_list ) {
-            dirty |= ptr->connectionStateChanged();
+            const bool stateChanged = ptr->connectionStateChanged();
             // delay in gui will be visible since update goes once per second
-            dirty |= ptr->scriptStateChanged();
-        }
-
-        if ( dirty ) {
-            LOG( LOG_DEBUG, "Changing dev listing\n" );
-            m_guiModel.refreshViews( prepareViewList( m_list ) );
+            // TODO: tell gui script has stopped
+            ptr->scriptStateChanged();
+            if ( stateChanged && !ptr->connectionState() ) {
+                m_clientComm->pushToClient( Message{ {}, {}, ptr->m_gamepadId, Message::Type::eGamepadDisconnected } );
+            }
         }
     }
 
-    m_list.clear();
+    if ( m_threadClientMessages.joinable() ) {
+        m_threadClientMessages.join();
+    }
 
+    m_list.clear();
     return 0;
+}
+
+void GGPAD::processClientMessages()
+{
+    assert( m_clientComm );
+    while ( m_isRunning ) {
+        while ( std::optional<Message> msg = m_clientComm->popFromClient() ) {
+            switch ( msg->m_type ) {
+            case Message::Type::eRunScript:
+                runScript( msg->m_id, msg->m_path );
+                break;
+
+            case Message::Type::eStopScript:
+                stopScript( msg->m_id );
+                break;
+
+            default:
+                assert( !"unhandled message enum" );
+            }
+        }
+        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+    }
 }
 
 void GGPAD::setKeyboard( uint32_t a_key, bool a_state )
@@ -185,40 +204,30 @@ void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
     s_instance->m_systemEvent->mouseMove( a_key, a_state );
 }
 
-void GGPAD::saveCurrentBinding()
+void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )
 {
-    Binding* binding = m_guiModel.currentSelection();
-    if ( !binding ) {
-        LOG( LOG_DEBUG, "Nothing to save" );
+    LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
+
+    BindList::iterator it = std::find_if( m_list.begin(), m_list.end()
+        , [ id ]( const Binding::Ptr& ptr ) { return id == ptr->m_gamepadId; }
+    );
+    if ( it == m_list.end() ) {
+        LOG( LOG_ERROR, "Failed to find binding for gameapd id %llu", id );
         return;
     }
+    setScriptForGamepad( it->get(), path.native() );
+}
 
+void GGPAD::stopScript( uint64_t id )
+{
     LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
-}
 
-void GGPAD::runCurrentBinding()
-{
-    Binding* binding = m_guiModel.currentSelection();
-    if ( binding ) {
-        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__, binding );
-        binding->run();
-    } else {
-        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__ );
+    BindList::iterator it = std::find_if( m_list.begin(), m_list.end()
+        , [ id ]( const Binding::Ptr& ptr ) { return id == ptr->m_gamepadId; }
+    );
+    if ( it == m_list.end() ) {
+        LOG( LOG_ERROR, "Failed to find binding for gameapd id %llu", id );
+        return;
     }
-}
-
-void GGPAD::stopCurrentBinding()
-{
-    Binding* binding = m_guiModel.currentSelection();
-    if ( binding ) {
-        LOG( LOG_DEBUG, "[%s:%llu] %p\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__, binding );
-        binding->stop();
-    } else {
-        LOG( LOG_DEBUG, "[%s:%llu] no binding selection\n", __PRETTY_FUNCTION__, (long long unsigned)__LINE__ );
-    }
-}
-
-void GGPAD::openScript( const std::string& filePath )
-{
-    setScriptForGamepad( m_guiModel.currentSelection(), filePath );
+    (*it)->stopScript();
 }

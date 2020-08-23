@@ -76,6 +76,7 @@ public:
     void stop();
 
     bool connectionStateChanged();
+    bool connectionState() const;
     bool scriptStateChanged();
     std::string gamepadName() const;
     std::string scriptStatusAsText() const;
@@ -88,4 +89,5 @@ public:
     void setEditor( void* );
 
     void setCurrentScriptFile( const std::filesystem::path& );
+    std::filesystem::path currentScriptFile() const;
 };

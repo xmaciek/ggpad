@@ -1,4 +1,4 @@
-// GGPAD Copyright 2019 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,48 +19,53 @@
 
 #include <QIcon>
 
-int ControllerModel::rowCount( const QModelIndex& parent ) const
+int GuiControllerModel::rowCount( const QModelIndex& parent ) const
 {
-    std::lock_guard<std::recursive_mutex> lg( m_mutex );
-    return m_bindings.size();
+    return m_gamepadInfoList.size();
 }
 
-QVariant ControllerModel::data( const QModelIndex& index, int role ) const
+QVariant GuiControllerModel::data( const QModelIndex& index, int role ) const
 {
-    std::lock_guard<std::recursive_mutex> lg( m_mutex );
-    assert( index.row() < m_bindings.size() );
-
     switch ( role ) {
-        case Qt::DisplayRole:
-            assert( m_bindings[ index.row() ] );
-            return QString( "%1\n%2" )
-                .arg( m_bindings[ index.row() ]->gamepadName().c_str() )
-                .arg( m_bindings[ index.row() ]->scriptStatusAsText().c_str() )
-            ;
-        case Qt::DecorationRole:
-            return QIcon::fromTheme( "input-gaming" );
+    case Qt::DisplayRole: {
+        assert( index.row() < m_gamepadInfoList.size() );
+        std::list<GamepadInfo>::const_iterator it = m_gamepadInfoList.begin();
+        std::advance( it, index.row() );
+        return QString( "%1\n%2" )
+            .arg( it->m_name.c_str() )
+            .arg( it->m_isConnected ? "" : "(disconnected)" )
+        ;
+    }
+    case Qt::DecorationRole:
+        return QIcon::fromTheme( "input-gaming" );
 
-        default:
-            return QVariant();
+    default:
+        return QVariant();
     }
 }
 
-void ControllerModel::refreshViews( std::vector<Binding*> b )
+GuiControllerModel::GamepadInfo& GuiControllerModel::operator [] ( uint64_t id )
 {
-    std::lock_guard<std::recursive_mutex> lg( m_mutex );
-    m_bindings = std::move( b );
+    const std::list<GamepadInfo>::iterator it = std::find_if(
+        m_gamepadInfoList.begin()
+        , m_gamepadInfoList.end()
+        , [id]( const GamepadInfo& gp ) { return gp.m_id == id; }
+    );
+    if ( it != m_gamepadInfoList.end() ) {
+        return *it;
+    }
+    return m_gamepadInfoList.emplace_back();
+}
+
+void GuiControllerModel::refresh()
+{
     emit dataChanged( QModelIndex(), QModelIndex() );
 }
 
-void ControllerModel::selectionChanged( const QModelIndex& index )
+void GuiControllerModel::selectionChanged( const QModelIndex& index )
 {
-    std::lock_guard<std::recursive_mutex> lg( m_mutex );
-    assert( index.row() < m_bindings.size() );
-    m_currentBinding = m_bindings[ index.row() ];
-    emit selectionChanged( m_currentBinding );
-}
-
-Binding* ControllerModel::currentSelection() const
-{
-    return m_currentBinding;
+    assert( index.row() < m_gamepadInfoList.size() );
+    std::list<GamepadInfo>::iterator it = m_gamepadInfoList.begin();
+    std::advance( it, index.row() );
+    emit selectionChanged( &(*it) );
 }

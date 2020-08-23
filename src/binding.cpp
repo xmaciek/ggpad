@@ -120,7 +120,7 @@ std::string Binding::scriptStatusAsText() const
 
 bool Binding::connectionStateChanged()
 {
-    const bool currentConnectionState = m_gamepad && m_gamepad->isConnected();
+    const bool currentConnectionState = connectionState();
     if ( currentConnectionState == m_lastGamepadConnectionState ) {
         return false;
     }
@@ -225,4 +225,14 @@ void Binding::setCurrentScriptFile( const std::filesystem::path& p )
 void Binding::discardEventQueue()
 {
     m_queue.clear();
+}
+
+bool Binding::connectionState() const
+{
+    return m_gamepad && m_gamepad->isConnected();
+}
+
+std::filesystem::path Binding::currentScriptFile() const
+{
+    return m_currentScriptFile;
 }

@@ -28,12 +28,29 @@
 #include <QVBoxLayout>
 
 #include <cassert>
+#include <filesystem>
 
-Gui::Gui( ControllerModel* model )
-: QMainWindow( 0 )
-, m_list( this )
-, m_editorStack( this )
-, m_toolbar( this )
+Gui::~Gui()
+{
+    for ( auto& it : m_editorMapStack ) {
+        delete it.second;
+    }
+}
+
+static QByteArray getFileContent( const QString& str )
+{
+    QFile f( str );
+    if ( !f.open( QIODevice::ReadOnly ) ) {
+        return {};
+    }
+
+    QByteArray ret( f.size(), '\0' );
+    f.read( ret.data(), ret.size() );
+    return ret;
+}
+
+Gui::Gui( Comm* serverComm )
+: m_serverComm{ serverComm }
 {
     LogView* logView = new LogView( this );
     logView->setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
@@ -48,22 +65,17 @@ Gui::Gui( ControllerModel* model )
 
     m_toolbar.setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
     m_actionOpen = m_toolbar.addAction( QIcon::fromTheme( "document-open" ), "Open" );
-    connect( m_actionOpen, &QAction::triggered, this, &Gui::onClickOpen );
+    connect( m_actionOpen, &QAction::triggered, this, &Gui::onOpen );
 
     m_actionSave = m_toolbar.addAction( QIcon::fromTheme( "document-save" ), "Save" );
-    connect( m_actionSave, &QAction::triggered,
-             [this]() { if ( m_saveScriptCb ) { m_saveScriptCb(); } }
-            );
+    connect( m_actionSave, &QAction::triggered, this, &Gui::onSave );
 
-    m_actionRun = m_toolbar.addAction( QIcon::fromTheme( "media-playback-start"), "Run" );
-    connect( m_actionRun, &QAction::triggered,
-             [this]() { if ( m_runScriptCb ) { m_runScriptCb(); } }
-            );
+    m_actionRun = m_toolbar.addAction( QIcon::fromTheme( "media-playback-start" ), "Run" );
+    connect( m_actionRun, &QAction::triggered, this, &Gui::onRun );
 
-    m_actionStop = m_toolbar.addAction( QIcon::fromTheme( "media-playback-stop"), "Stop" );
-    connect( m_actionStop, &QAction::triggered,
-             [this]() { if ( m_stopScriptCb ) { m_stopScriptCb(); } }
-            );
+    m_actionStop = m_toolbar.addAction( QIcon::fromTheme( "media-playback-stop" ), "Stop" );
+    connect( m_actionStop, &QAction::triggered, this, &Gui::onStop );
+
     addToolBar( Qt::TopToolBarArea, &m_toolbar );
 
 
@@ -78,52 +90,64 @@ Gui::Gui( ControllerModel* model )
         m_editorStack.addWidget( tmp );
     }
 
-    m_list.setModel( model );
+    m_list.setModel( &m_model );
+
     connect(
         &m_list
         , &QListView::clicked
-        , model
-        , qOverload<const QModelIndex&>( &ControllerModel::selectionChanged )
+        , &m_model
+        , qOverload<const QModelIndex&>( &GuiControllerModel::selectionChanged )
     );
 
     connect(
-        model
-        , qOverload<Binding*>( &ControllerModel::selectionChanged )
+        &m_model
+        , qOverload<GuiControllerModel::GamepadInfo*>( &GuiControllerModel::selectionChanged )
         , this
         , &Gui::selectionChanged
     );
+
+    if ( serverComm ) {
+        connect( &m_timerServerMessages, &QTimer::timeout, this, &Gui::processServerMessages );
+        m_timerServerMessages.start( 100 );
+    }
+
     resize( 1280, 720 );
     show();
 }
 
-void Gui::setOpenCb( const std::function<void()>& foo )
+void Gui::onSave()
 {
-    m_openScriptCb = foo;
 }
 
-void Gui::setSaveCb( const std::function<void()>& foo )
+void Gui::onRun()
 {
-    m_saveScriptCb = foo;
+    if ( !m_currentInfo ) {
+        LOG( LOG_DEBUG, "<font color=orange>No selection, this btn should be disabled</font>" );
+        return;
+    }
+    assert( m_currentInfo );
+    assert( m_serverComm );
+    m_serverComm->pushToServer( Message{ {}, {}, m_currentInfo->m_id, Message::Type::eRunScript } );
 }
 
-void Gui::setRunCb( const std::function<void()>& foo )
+void Gui::onStop()
 {
-    m_runScriptCb = foo;
+    if ( !m_currentInfo ) {
+        LOG( LOG_DEBUG, "<font color=orange>No selection, this btn should be disabled</font>" );
+        return;
+    }
+    assert( m_currentInfo );
+    assert( m_serverComm );
+    m_serverComm->pushToServer( Message{ {}, {}, m_currentInfo->m_id, Message::Type::eStopScript } );
 }
 
-void Gui::setStopCb( const std::function<void()>& foo )
+void Gui::onUpdate()
 {
-    m_stopScriptCb = foo;
 }
 
-void Gui::setUpdateCb( const std::function<void(const std::string&)>& foo )
+void Gui::onOpen()
 {
-    m_updateScriptCb = foo;
-}
-
-void Gui::onClickOpen()
-{
-    if ( !m_currentBinding ) {
+    if ( !m_currentInfo ) {
         LOG( LOG_DEBUG, "<font color=orange>No selection, this btn should be disabled</font>" );
         return;
     }
@@ -140,43 +164,49 @@ void Gui::onClickOpen()
     QStringList fileNames = ptr->selectedFiles();
     ptr.clear();
 
-    assert( m_updateScriptCb );
+    QTextEdit* editor = m_editorMapStack[ m_currentInfo->m_id ];
+    assert( editor );
     for ( const QString& it : fileNames ) {
-        m_updateScriptCb( it.toStdString() );
-        QTextEdit* editor = nullptr;
-        if ( m_currentBinding ) {
-            editor = reinterpret_cast<QTextEdit*>( m_currentBinding->editor() );
-        }
-        if ( editor ) {
-            assert( m_currentBinding->m_script );
-            editor->setText( m_currentBinding->m_script->text().c_str() );
-        }
+        editor->setText( getFileContent( it ) );
     }
 }
 
-static QTextEdit* createEditor( QWidget* parent )
+static QTextEdit* createEditor( QWidget* parent, const std::filesystem::path& filePath )
 {
     QTextEdit* editor = new QTextEdit( parent );
     new SyntaxHighlight( editor->document() );
     editor->setFont( QFontDatabase::systemFont( QFontDatabase::FixedFont ) );
+    editor->setText( getFileContent( filePath.c_str() ) );
     return editor;
 }
 
-void Gui::selectionChanged( Binding* b )
+void Gui::selectionChanged( GuiControllerModel::GamepadInfo* gi )
 {
-    m_currentBinding = b;
-    if ( !b ) {
-        return;
-    }
-    QTextEdit* editor = reinterpret_cast<QTextEdit*>( b->editor() );
+    assert( gi );
+    m_currentInfo = gi;
+    QTextEdit* editor = m_editorMapStack[ gi->m_id ];
     if ( !editor ) {
-        editor = createEditor( this );
+        editor = createEditor( this, gi->m_scriptPath );
         assert( editor );
-        b->setEditor( editor );
         m_editorStack.addWidget( editor );
-        if ( b->m_script ) {
-            editor->setText( b->m_script->text().c_str() );
-        }
+        m_editorMapStack[ gi->m_id ] = editor;
     }
     m_editorStack.setCurrentWidget( editor );
+}
+
+void Gui::processServerMessages()
+{
+    assert( m_serverComm );
+    while ( const std::optional<Message> msg = m_serverComm->popFromServer() ) {
+        switch ( msg->m_type ) {
+        case Message::Type::eGamepadConnected:
+            m_model[ msg->m_id ] = GuiControllerModel::GamepadInfo{ msg->m_id, msg->m_name, msg->m_path, true };
+            m_model.refresh();
+            break;
+        case Message::Type::eGamepadDisconnected:
+            m_model[ msg->m_id ].m_isConnected = false;
+            m_model.refresh();
+            break;
+        }
+    }
 }

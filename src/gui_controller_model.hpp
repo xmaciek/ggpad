@@ -1,4 +1,4 @@
-// GGPAD Copyright 2019 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,30 +18,37 @@
 #include <QAbstractListModel>
 #include <QString>
 
+#include <filesystem>
+#include <list>
 #include <memory>
 #include <mutex>
+#include <string>
 
-class Binding;
-
-class ControllerModel : public QAbstractListModel {
+class GuiControllerModel : public QAbstractListModel {
     Q_OBJECT
 
-    mutable std::recursive_mutex m_mutex;
-    std::vector<Binding*> m_bindings;
-    Binding* m_currentBinding = nullptr;
+public:
+    struct GamepadInfo {
+        uint64_t m_id = 0;
+        std::string m_name;
+        std::filesystem::path m_scriptPath;
+        bool m_isConnected = false;
+    };
+
+private:
+    std::list<GamepadInfo> m_gamepadInfoList;
 
 public:
-    ControllerModel() = default;
-
-    virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
-    virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    ~GuiControllerModel() = default;
+    GuiControllerModel() = default;
 
     void selectionChanged( const QModelIndex& );
-    void refreshViews( std::vector<Binding*> );
-
-    Binding* currentSelection() const;
+    virtual int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
+    virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    GamepadInfo& operator [] ( uint64_t );
+    void append( GamepadInfo&& );
+    void refresh();
 
 signals:
-    void selectionChanged( Binding* );
-
+    void selectionChanged( GamepadInfo* );
 };

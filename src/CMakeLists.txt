@@ -33,6 +33,7 @@ set( sources
     allocator.cpp
     barrier.cpp
     binding.cpp
+    comm.cpp
     ggpad.cpp
     gui.cpp
     gui_controller_model.cpp

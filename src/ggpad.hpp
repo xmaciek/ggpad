@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "binding.hpp"
+#include "comm.hpp"
 #include "gui.hpp"
 #include "gui_controller_model.hpp"
 #include "macros.hpp"
@@ -45,15 +46,16 @@ private:
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
     std::unique_ptr<Gui> m_gui;
-    ControllerModel m_guiModel;
 
-    void saveCurrentBinding();
-    void runCurrentBinding();
-    void stopCurrentBinding();
-    void openScript( const std::string& );
+    Comm* m_clientComm = nullptr;
+    std::thread m_threadClientMessages;
+    void processClientMessages();
+
+    void runScript( uint64_t id, const std::filesystem::path& );
+    void stopScript( uint64_t id );
 
 public:
-    GGPAD();
+    GGPAD( Comm* );
     ~GGPAD();
 
     static void setKeyboard( uint32_t, bool );

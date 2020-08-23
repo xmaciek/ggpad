@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,26 +13,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <QApplication>
-
 #include "comm.hpp"
-#include "ggpad.hpp"
 
-#include <functional>
-
-int main( int argc, char** argv )
+void Comm::pushToServer( Message&& msg )
 {
-    QApplication app( argc, argv );
-    app.setStyle( "fusion" );
-
-    Comm comm{};
-    GGPAD ggpad{ &comm };
-    std::thread ex( &GGPAD::exec, &ggpad );
-
-    QObject::connect( &app, &QApplication::aboutToQuit, std::bind( &GGPAD::quit, &ggpad ) );
-
-    const int ret = app.exec();
-    ex.join();
-    return ret;
+    m_queueA.emplace( std::forward<Message>( msg ) );
 }
 
+void Comm::pushToClient( Message&& msg )
+{
+    m_queueB.emplace( std::forward<Message>( msg ) );
+}
+
+std::optional<Message> Comm::popFromClient()
+{
+    return m_queueA.pop();
+}
+
+std::optional<Message> Comm::popFromServer()
+{
+    return m_queueB.pop();
+}
