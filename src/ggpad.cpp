@@ -204,30 +204,40 @@ void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
     s_instance->m_systemEvent->mouseMove( a_key, a_state );
 }
 
+Binding* GGPAD::findById( uint64_t id )
+{
+    for ( Binding::Ptr& it : m_list ) {
+        assert( it );
+        if ( it->m_gamepadId == id ) {
+            return it.get();
+        }
+    }
+    LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
+    return nullptr;
+}
+
 void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )
 {
     LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
 
-    BindList::iterator it = std::find_if( m_list.begin(), m_list.end()
-        , [ id ]( const Binding::Ptr& ptr ) { return id == ptr->m_gamepadId; }
-    );
-    if ( it == m_list.end() ) {
-        LOG( LOG_ERROR, "Failed to find binding for gameapd id %llu", id );
+    Binding* binding = findById( id );
+    assert( binding );
+    if ( !binding ) {
+        LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
         return;
     }
-    setScriptForGamepad( it->get(), path.native() );
+    setScriptForGamepad( binding, path.native() );
 }
 
 void GGPAD::stopScript( uint64_t id )
 {
     LOG( LOG_DEBUG, "%s\n", __FUNCTION__ );
 
-    BindList::iterator it = std::find_if( m_list.begin(), m_list.end()
-        , [ id ]( const Binding::Ptr& ptr ) { return id == ptr->m_gamepadId; }
-    );
-    if ( it == m_list.end() ) {
-        LOG( LOG_ERROR, "Failed to find binding for gameapd id %llu", id );
+    Binding* binding = findById( id );
+    assert( binding );
+    if ( !binding ) {
+        LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
         return;
     }
-    (*it)->stopScript();
+    binding->stopScript();
 }

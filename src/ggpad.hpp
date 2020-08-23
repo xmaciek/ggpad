@@ -54,6 +54,8 @@ private:
     void runScript( uint64_t id, const std::filesystem::path& );
     void stopScript( uint64_t id );
 
+    Binding* findById( uint64_t );
+
 public:
     GGPAD( Comm* );
     ~GGPAD();
