@@ -71,7 +71,7 @@ Settings::~Settings()
 static std::string formatVidPid( uint64_t vidpid )
 {
     char text[ 18 ];
-    std::snprintf( text, 18, "0x%08luX", vidpid );
+    std::snprintf( text, 18, "0x%08lX", vidpid );
     return text;
 }
 
