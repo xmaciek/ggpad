@@ -120,6 +120,7 @@ static void pushNewBinding( Gamepad* a_gamepad, std::list<Binding>* a_bindList, 
 void GGPAD::quit()
 {
     m_isRunning = false;
+    m_settings.save();
 }
 
 int GGPAD::exec()
@@ -223,6 +224,8 @@ void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )
         return;
     }
     setScriptForGamepad( binding, path.native() );
+    m_settings[ id ] = path.native();
+    binding->run();
 }
 
 void GGPAD::stopScript( uint64_t id )

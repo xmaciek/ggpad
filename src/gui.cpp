@@ -127,7 +127,7 @@ void Gui::onRun()
     }
     assert( m_currentInfo );
     assert( m_serverComm );
-    m_serverComm->pushToServer( Message{ {}, {}, m_currentInfo->m_id, Message::Type::eRunScript } );
+    m_serverComm->pushToServer( Message{ m_currentInfo->m_scriptPath, {}, m_currentInfo->m_id, Message::Type::eRunScript } );
     m_serverComm->notifyServer();
 }
 
