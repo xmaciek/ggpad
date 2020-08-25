@@ -55,7 +55,6 @@ GGPAD::GGPAD( Comm* clientComm )
     if ( !s_instance ) {
         s_instance = this;
     }
-    m_gui = std::make_unique<Gui>( clientComm );
     m_systemEvent = std::make_unique<SystemEvent>();
     m_deviceWatcher = std::make_unique<WatcherUDev>();
 }

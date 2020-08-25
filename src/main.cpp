@@ -16,6 +16,7 @@
 #include <QApplication>
 
 #include "comm.hpp"
+#include "gui.hpp"
 #include "ggpad.hpp"
 
 #include <functional>
@@ -26,12 +27,12 @@ int main( int argc, char** argv )
     app.setStyle( "fusion" );
 
     Comm comm{};
+    Gui gui{ &comm };
     GGPAD ggpad{ &comm };
     std::thread ex( &GGPAD::exec, &ggpad );
 
-    QObject::connect( &app, &QApplication::aboutToQuit, std::bind( &GGPAD::quit, &ggpad ) );
-
     const int ret = app.exec();
+    ggpad.quit();
     ex.join();
     return ret;
 }

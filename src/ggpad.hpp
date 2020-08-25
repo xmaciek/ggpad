@@ -22,8 +22,6 @@
 
 #include "binding.hpp"
 #include "comm.hpp"
-#include "gui.hpp"
-#include "gui_controller_model.hpp"
 #include "macros.hpp"
 #include "watcher.hpp"
 #include "settings.hpp"
@@ -45,7 +43,6 @@ private:
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
-    std::unique_ptr<Gui> m_gui;
 
     Comm* m_clientComm = nullptr;
     std::thread m_threadClientMessages;
