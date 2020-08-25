@@ -130,10 +130,10 @@ int GGPAD::exec()
     for ( Gamepad* it : list ) {
         pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
         m_clientComm->pushToClient( Message{
-            m_settings[ it->uid() ]
-            , it->displayName()
+            Message::Type::eGamepadConnected
             , it->uid()
-            , Message::Type::eGamepadConnected
+            , it->displayName()
+            , m_settings[ it->uid() ]
             }
         );
 
@@ -145,10 +145,10 @@ int GGPAD::exec()
         for ( Gamepad* it : list ) {
             pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
             m_clientComm->pushToClient( Message{
-                m_settings[ it->uid() ]
-                , it->displayName()
+                Message::Type::eGamepadConnected
                 , it->uid()
-                , Message::Type::eGamepadConnected
+                , it->displayName()
+                , m_settings[ it->uid() ]
                 }
             );
         }
@@ -157,7 +157,7 @@ int GGPAD::exec()
             const bool stateChanged = it.connectionStateChanged();
             it.scriptStateChanged();
             if ( stateChanged && !it.connectionState() ) {
-                m_clientComm->pushToClient( Message{ {}, {}, it.m_gamepadId, Message::Type::eGamepadDisconnected } );
+                m_clientComm->pushToClient( Message{ Message::Type::eGamepadDisconnected, it.m_gamepadId } );
             }
         }
     }

@@ -35,6 +35,13 @@ struct Message {
     std::string m_name{}; // optional
     uint64_t m_id = 0;
     Type m_type{};
+
+    ~Message() noexcept = default;
+    Message() noexcept = default;
+    explicit Message( Type, uint64_t );
+    explicit Message( Type, uint64_t, const std::string& );
+    explicit Message( Type, uint64_t, const std::filesystem::path& );
+    explicit Message( Type, uint64_t, const std::string&, const std::filesystem::path& );
 };
 
 class Comm {

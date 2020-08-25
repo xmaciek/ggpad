@@ -15,6 +15,34 @@
 
 #include "comm.hpp"
 
+Message::Message( Type type, uint64_t id )
+: m_id( id )
+, m_type( type )
+{
+}
+
+Message::Message( Type type, uint64_t id, const std::string& name )
+: m_name( name )
+, m_id( id )
+, m_type( type )
+{
+}
+
+Message::Message( Type type, uint64_t id, const std::filesystem::path& path )
+: m_path( path )
+, m_id( id )
+, m_type( type )
+{
+}
+
+Message::Message( Type type, uint64_t id, const std::string& name, const std::filesystem::path& path )
+: m_path( path )
+, m_name( name )
+, m_id( id )
+, m_type( type )
+{
+}
+
 void Comm::pushToServer( Message&& msg )
 {
     m_queueA.emplace( std::forward<Message>( msg ) );
