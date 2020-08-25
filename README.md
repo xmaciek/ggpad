@@ -1,2 +1,2 @@
 # ggpad
-Scriptable gamepad to keyboard mapping tool
+Lua scriptable gamepad to keyboard mapping tool
