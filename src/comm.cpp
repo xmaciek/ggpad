@@ -34,3 +34,24 @@ std::optional<Message> Comm::popFromServer()
 {
     return m_queueB.pop();
 }
+
+
+void Comm::notifyClient()
+{
+    m_barrierB.notify();
+}
+
+void Comm::notifyServer()
+{
+    m_barrierA.notify();
+}
+
+void Comm::waitForClient( const std::chrono::high_resolution_clock::duration& d )
+{
+    m_barrierA.wait_for( d );
+}
+
+void Comm::waitForServer( const std::chrono::high_resolution_clock::duration& d )
+{
+    m_barrierB.wait_for( d );
+}

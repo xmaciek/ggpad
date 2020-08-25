@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "barrier.hpp"
 #include "queue.hpp"
 
 #include <cstdint>
@@ -37,8 +38,10 @@ struct Message {
 };
 
 class Comm {
-    Queue<Message> m_queueA;
-    Queue<Message> m_queueB;
+    Queue<Message> m_queueA{};
+    Queue<Message> m_queueB{};
+    Barrier m_barrierA{};
+    Barrier m_barrierB{};
 
 public:
     ~Comm() noexcept = default;
@@ -49,4 +52,10 @@ public:
 
     void pushToClient( Message&& );
     void pushToServer( Message&& );
+
+    void notifyClient();
+    void notifyServer();
+
+    void waitForClient( const std::chrono::high_resolution_clock::duration& );
+    void waitForServer( const std::chrono::high_resolution_clock::duration& );
 };

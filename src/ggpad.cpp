@@ -190,7 +190,7 @@ void GGPAD::processClientMessages()
                 assert( !"unhandled message enum" );
             }
         }
-        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+        m_clientComm->waitForClient( std::chrono::milliseconds( 100 ) );
     }
 }
 

@@ -128,6 +128,7 @@ void Gui::onRun()
     assert( m_currentInfo );
     assert( m_serverComm );
     m_serverComm->pushToServer( Message{ {}, {}, m_currentInfo->m_id, Message::Type::eRunScript } );
+    m_serverComm->notifyServer();
 }
 
 void Gui::onStop()
@@ -139,6 +140,7 @@ void Gui::onStop()
     assert( m_currentInfo );
     assert( m_serverComm );
     m_serverComm->pushToServer( Message{ {}, {}, m_currentInfo->m_id, Message::Type::eStopScript } );
+    m_serverComm->notifyServer();
 }
 
 void Gui::onUpdate()
