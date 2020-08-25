@@ -30,16 +30,13 @@
 class GGPAD {
     DISABLE_COPY( GGPAD );
 
-public:
-    using BindList = std::vector<Binding::Ptr>;
-
 private:
     static GGPAD* s_instance;
     Settings m_settings;
 
     bool m_isRunning = true;
 
-    BindList m_list;
+    std::list<Binding> m_list;
 
     std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;

@@ -68,15 +68,15 @@ GGPAD::~GGPAD()
     }
 }
 
-static Binding::Ptr& bindingForGamepad( Gamepad* a_gamepad, GGPAD::BindList* a_bindList )
+static Binding* bindingForGamepad( Gamepad* a_gamepad, std::list<Binding>* a_bindList )
 {
-    for ( Binding::Ptr& it : *a_bindList ) {
-        if ( it->m_gamepadId == a_gamepad->uid() ) {
-            return it;
+    for ( Binding& it : *a_bindList ) {
+        if ( it.m_gamepadId == a_gamepad->uid() ) {
+            return &it;
         }
     }
-    a_bindList->push_back( std::make_unique<Binding>() );
-    return a_bindList->back();
+    a_bindList->emplace_back();
+    return &a_bindList->back();
 
 }
 
@@ -109,11 +109,11 @@ static void setScriptForGamepad( Binding* binding, const std::string& a_scriptFi
     binding->discardEventQueue();
 }
 
-static void pushNewBinding( Gamepad* a_gamepad, GGPAD::BindList* a_bindList, const std::string& a_scriptFile )
+static void pushNewBinding( Gamepad* a_gamepad, std::list<Binding>* a_bindList, const std::string& a_scriptFile )
 {
-    Binding::Ptr& ptr = bindingForGamepad( a_gamepad, a_bindList );
+    Binding* ptr = bindingForGamepad( a_gamepad, a_bindList );
     ptr->setGamepad( a_gamepad );
-    setScriptForGamepad( ptr.get(), a_scriptFile );
+    setScriptForGamepad( ptr, a_scriptFile );
     ptr->run();
 }
 
@@ -152,13 +152,11 @@ int GGPAD::exec()
             );
         }
 
-        for ( Binding::Ptr& ptr : m_list ) {
-            const bool stateChanged = ptr->connectionStateChanged();
-            // delay in gui will be visible since update goes once per second
-            // TODO: tell gui script has stopped
-            ptr->scriptStateChanged();
-            if ( stateChanged && !ptr->connectionState() ) {
-                m_clientComm->pushToClient( Message{ {}, {}, ptr->m_gamepadId, Message::Type::eGamepadDisconnected } );
+        for ( Binding& it : m_list ) {
+            const bool stateChanged = it.connectionStateChanged();
+            it.scriptStateChanged();
+            if ( stateChanged && !it.connectionState() ) {
+                m_clientComm->pushToClient( Message{ {}, {}, it.m_gamepadId, Message::Type::eGamepadDisconnected } );
             }
         }
     }
@@ -205,10 +203,9 @@ void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
 
 Binding* GGPAD::findById( uint64_t id )
 {
-    for ( Binding::Ptr& it : m_list ) {
-        assert( it );
-        if ( it->m_gamepadId == id ) {
-            return it.get();
+    for ( Binding& it : m_list ) {
+        if ( it.m_gamepadId == id ) {
+            return &it;
         }
     }
     LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );

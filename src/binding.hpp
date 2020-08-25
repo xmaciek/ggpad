@@ -53,7 +53,6 @@ class Binding {
     void updateLoop();
 
 public:
-    using Ptr = std::unique_ptr<Binding>;
     using LockGuard = std::lock_guard<std::mutex>;
 
     void setScript( Script* );
