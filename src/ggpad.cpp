@@ -129,14 +129,8 @@ int GGPAD::exec()
     std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
     for ( Gamepad* it : list ) {
         pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
-        m_clientComm->pushToClient( Message{
-            Message::Type::eGamepadConnected
-            , it->uid()
-            , it->displayName()
-            , m_settings[ it->uid() ]
-            }
-        );
-
+        m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
+        m_clientComm->pushToClient( Message{ Message::Type::eRunScript, it->uid(), m_settings[ it->uid() ] } );
     }
 
     while ( m_isRunning ) {
@@ -144,13 +138,8 @@ int GGPAD::exec()
         list = m_deviceWatcher->newDevices();
         for ( Gamepad* it : list ) {
             pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
-            m_clientComm->pushToClient( Message{
-                Message::Type::eGamepadConnected
-                , it->uid()
-                , it->displayName()
-                , m_settings[ it->uid() ]
-                }
-            );
+            m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
+            m_clientComm->pushToClient( Message{ Message::Type::eRunScript, it->uid(), m_settings[ it->uid() ] } );
         }
 
         for ( Binding& it : m_list ) {
@@ -177,7 +166,7 @@ void GGPAD::processClientMessages()
         while ( std::optional<Message> msg = m_clientComm->popFromClient() ) {
             switch ( msg->m_type ) {
             case Message::Type::eRunScript:
-                runScript( msg->m_id, msg->m_path );
+                runScript( msg->m_id, msg->toPath() );
                 break;
 
             case Message::Type::eStopScript:

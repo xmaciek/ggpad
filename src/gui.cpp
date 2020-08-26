@@ -202,7 +202,11 @@ void Gui::processServerMessages()
     while ( const std::optional<Message> msg = m_serverComm->popFromServer() ) {
         switch ( msg->m_type ) {
         case Message::Type::eGamepadConnected:
-            m_model[ msg->m_id ] = GuiControllerModel::GamepadInfo{ msg->m_id, msg->m_name, msg->m_path, true };
+            m_model[ msg->m_id ] = GuiControllerModel::GamepadInfo{ msg->m_id, msg->toString(), {}, true };
+            m_model.refresh();
+            break;
+        case Message::Type::eRunScript:
+            m_model[ msg->m_id ].m_scriptPath = msg->toPath();
             m_model.refresh();
             break;
         case Message::Type::eGamepadDisconnected:

@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <variant>
 
 struct Message {
     enum struct Type : uint8_t {
@@ -31,8 +32,7 @@ struct Message {
         eRunScript,
     };
 
-    std::filesystem::path m_path{}; // optional
-    std::string m_name{}; // optional
+    std::variant<std::monostate, std::filesystem::path, std::string> m_data{};
     uint64_t m_id = 0;
     Type m_type{};
 
@@ -41,7 +41,9 @@ struct Message {
     explicit Message( Type, uint64_t );
     explicit Message( Type, uint64_t, const std::string& );
     explicit Message( Type, uint64_t, const std::filesystem::path& );
-    explicit Message( Type, uint64_t, const std::string&, const std::filesystem::path& );
+
+    const std::string& toString() const;
+    const std::filesystem::path& toPath() const;
 };
 
 class Comm {

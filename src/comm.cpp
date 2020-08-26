@@ -15,6 +15,8 @@
 
 #include "comm.hpp"
 
+#include <cassert>
+
 Message::Message( Type type, uint64_t id )
 : m_id( id )
 , m_type( type )
@@ -22,25 +24,29 @@ Message::Message( Type type, uint64_t id )
 }
 
 Message::Message( Type type, uint64_t id, const std::string& name )
-: m_name( name )
+: m_data{ name }
 , m_id( id )
 , m_type( type )
 {
 }
 
 Message::Message( Type type, uint64_t id, const std::filesystem::path& path )
-: m_path( path )
+: m_data{ path }
 , m_id( id )
 , m_type( type )
 {
 }
 
-Message::Message( Type type, uint64_t id, const std::string& name, const std::filesystem::path& path )
-: m_path( path )
-, m_name( name )
-, m_id( id )
-, m_type( type )
+const std::filesystem::path& Message::toPath() const
 {
+    assert( std::holds_alternative<std::filesystem::path>( m_data ) );
+    return std::get<std::filesystem::path>( m_data );
+}
+
+const std::string& Message::toString() const
+{
+    assert( std::holds_alternative<std::filesystem::path>( m_data ) );
+    return std::get<std::string>( m_data );
 }
 
 void Comm::pushToServer( Message&& msg )
@@ -62,7 +68,6 @@ std::optional<Message> Comm::popFromServer()
 {
     return m_queueB.pop();
 }
-
 
 void Comm::notifyClient()
 {
