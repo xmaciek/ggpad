@@ -163,14 +163,14 @@ void Gui::onOpen()
     if ( !ptr->exec() ) {
         return;
     }
-    QStringList fileNames = ptr->selectedFiles();
+    const QStringList fileNames = ptr->selectedFiles();
+    assert( fileNames.size() == 1 );
     ptr.clear();
 
+    m_currentInfo->m_scriptPath = fileNames[ 0 ].toStdString();
     QTextEdit* editor = m_editorMapStack[ m_currentInfo->m_id ];
     assert( editor );
-    for ( const QString& it : fileNames ) {
-        editor->setText( getFileContent( it ) );
-    }
+    editor->setText( getFileContent( fileNames[ 0 ] ) );
 }
 
 static QTextEdit* createEditor( QWidget* parent, const std::filesystem::path& filePath )
