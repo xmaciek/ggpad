@@ -13,16 +13,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <cstdint>
-#include <map>
-#include <string>
 
 #include "macros.hpp"
+
+#include <cstdint>
+#include <map>
+#include <filesystem>
 
 class Settings {
     DISABLE_COPY( Settings )
 
-    std::map<uint64_t, std::string> m_gamepadsScriptFile;
+    std::map<uint64_t, std::filesystem::path> m_gamepadsScriptFile;
 
 public:
     Settings();
@@ -30,5 +31,5 @@ public:
 
     void save();
 
-    std::string& operator [] ( uint64_t uid );
+    std::filesystem::path& operator [] ( uint64_t uid );
 };

@@ -80,7 +80,7 @@ static Binding* bindingForGamepad( Gamepad* a_gamepad, std::list<Binding>* a_bin
 
 }
 
-static void setScriptForGamepad( Binding* binding, const std::string& a_scriptFile )
+static void setScriptForGamepad( Binding* binding, const std::filesystem::path& a_scriptFile )
 {
     if ( !binding ) {
         LOG( LOG_DEBUG, "Gamepad not selected" );
@@ -109,7 +109,7 @@ static void setScriptForGamepad( Binding* binding, const std::string& a_scriptFi
     binding->discardEventQueue();
 }
 
-static void pushNewBinding( Gamepad* a_gamepad, std::list<Binding>* a_bindList, const std::string& a_scriptFile )
+static void pushNewBinding( Gamepad* a_gamepad, std::list<Binding>* a_bindList, const std::filesystem::path& a_scriptFile )
 {
     Binding* ptr = bindingForGamepad( a_gamepad, a_bindList );
     ptr->setGamepad( a_gamepad );
@@ -212,8 +212,8 @@ void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )
         LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
         return;
     }
-    setScriptForGamepad( binding, path.native() );
-    m_settings[ id ] = path.native();
+    setScriptForGamepad( binding, path );
+    m_settings[ id ] = path;
     binding->run();
 }
 

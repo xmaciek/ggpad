@@ -52,25 +52,21 @@ void Script::bindTable( const char* a_name, const std::vector<Script::Record>& a
     lua_setglobal( m_vm, a_name );
 }
 
-void Script::doFile( const char* a_fileName )
+void Script::doFile( const std::filesystem::path& a_fileName )
 {
     assert( m_vm );
     std::ifstream ifs( a_fileName, std::ios::binary | std::ios::ate );
     assert( ifs.is_open() );
-    m_text.resize( (std::size_t)ifs.tellg() + 1 );
+    std::string text;
+    text.resize( (std::size_t)ifs.tellg() + 1 );
     ifs.seekg( 0 );
-    ifs.read( m_text.data(), m_text.size() );
+    ifs.read( text.data(), text.size() );
     ifs.close();
-    m_text.back() = 0;
-    setErrorCode( luaL_dostring( m_vm, m_text.c_str() ) );
+    text.back() = 0;
+    setErrorCode( luaL_dostring( m_vm, text.c_str() ) );
     if ( errorCode() != LUA_OK ) {
         LOG( LOG_ERROR, "%s", lua_tostring( m_vm, Address::eValue ) );
     }
-}
-
-const std::string& Script::text() const
-{
-    return m_text;
 }
 
 Script::Function Script::operator [] ( std::string_view name )

@@ -80,12 +80,12 @@ void Settings::save()
     std::filesystem::create_directory( settingsDir() );
     std::ofstream ofs( settingsFile() );
     ofs << "bindings = {}" << std::endl;
-    for ( const std::pair<uint64_t,std::string>& it : m_gamepadsScriptFile ) {
-        ofs << "bindings[ " << formatVidPid( it.first ) << " ] = \"" << it.second << "\"" << std::endl;
+    for ( const auto& it : m_gamepadsScriptFile ) {
+        ofs << "bindings[ " << formatVidPid( it.first ) << " ] = \"" << it.second.native() << "\"" << std::endl;
     }
 }
 
-std::string& Settings::operator [] ( uint64_t uid )
+std::filesystem::path& Settings::operator [] ( uint64_t uid )
 {
     return m_gamepadsScriptFile[ uid ];
 }

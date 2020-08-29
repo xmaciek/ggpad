@@ -16,13 +16,14 @@
 #pragma once
 
 #include "allocator.hpp"
+#include "macros.hpp"
+#include "lua_function.hpp"
+
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "macros.hpp"
-#include "lua_function.hpp"
 
 struct lua_State;
 
@@ -38,7 +39,6 @@ public:
 private:
     Allocator m_allocator;
     vm_type* m_vm = nullptr;
-    std::string m_text;
 
     int m_lastErrorCode = 0;
     static int stackCount( vm_type* );
@@ -64,8 +64,7 @@ public:
     ~Script() noexcept;
     Script() noexcept;
 
-    void doFile( const char* a_fileName );
-    const std::string& text() const;
+    void doFile( const std::filesystem::path& );
 
     void bindTable( const char* a_name, const std::vector<Record>& a_records );
     std::vector<Pair> getTable( const char* a_name );
