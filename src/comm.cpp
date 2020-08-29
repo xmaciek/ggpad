@@ -45,7 +45,7 @@ const std::filesystem::path& Message::toPath() const
 
 const std::string& Message::toString() const
 {
-    assert( std::holds_alternative<std::filesystem::path>( m_data ) );
+    assert( std::holds_alternative<std::string>( m_data ) );
     return std::get<std::string>( m_data );
 }
 
