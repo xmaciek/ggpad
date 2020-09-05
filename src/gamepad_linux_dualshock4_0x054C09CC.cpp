@@ -19,23 +19,23 @@
 constexpr static const MapTable unsorted[] = {
     { EV_KEY, BTN_SOUTH, 0, 1, ConversionType::Digital, Gamepad::A, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_EAST, 0, 1, ConversionType::Digital, Gamepad::B, Gamepad::unknown, 0, 1 }
-    , { EV_KEY, BTN_WEST, 0, 1, ConversionType::Digital, Gamepad::Y, Gamepad::unknown, 0, 1 }
-    , { EV_KEY, BTN_NORTH, 0, 1, ConversionType::Digital, Gamepad::X, Gamepad::unknown, 0, 1 }
+    , { EV_KEY, BTN_NORTH, 0, 1, ConversionType::Digital, Gamepad::Y, Gamepad::unknown, 0, 1 }
+    , { EV_KEY, BTN_WEST, 0, 1, ConversionType::Digital, Gamepad::X, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_TL, 0, 1, ConversionType::Digital, Gamepad::L1, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_TR, 0, 1, ConversionType::Digital, Gamepad::R1, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_THUMBL, 0, 1, ConversionType::Digital, Gamepad::L3, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_THUMBR, 0, 1, ConversionType::Digital, Gamepad::R3, Gamepad::unknown, 0, 1 }
     , { EV_KEY, BTN_START, 0, 1, ConversionType::Digital, Gamepad::START, Gamepad::unknown, 0, 1 }
-    , { EV_KEY, 0x009E, 0, 1, ConversionType::Digital, Gamepad::SELECT, Gamepad::unknown, 0, 1 }
-    , { EV_ABS, ABS_X, 0, 0xFFFF, ConversionType::Analog, Gamepad::LX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
-    , { EV_ABS, ABS_Y, 0, 0xFFFF, ConversionType::Analog, Gamepad::LY, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
-    , { EV_ABS, 0x0002, 0, 0xFFFF, ConversionType::Analog, Gamepad::RX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
-    , { EV_ABS, 0x0005, 0, 0xFFFF, ConversionType::Analog, Gamepad::RY, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
-    , { EV_ABS, 0x000A, 0, 1023, ConversionType::Analog, Gamepad::L2, Gamepad::unknown, 0, Gamepad::Event::max() }
-    , { EV_ABS, 0x0009, 0, 1023, ConversionType::Analog, Gamepad::R2, Gamepad::unknown, 0, Gamepad::Event::max() }
+    , { EV_KEY, BTN_SELECT, 0, 1, ConversionType::Digital, Gamepad::SELECT, Gamepad::unknown, 0, 1 }
+    , { EV_ABS, ABS_X, 0, 0xFF, ConversionType::Analog, Gamepad::LX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, ABS_Y, 0, 0xFF, ConversionType::Analog, Gamepad::LY, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, ABS_RX, 0, 0xFF, ConversionType::Analog, Gamepad::RX, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, ABS_RY, 0, 0xFF, ConversionType::Analog, Gamepad::RY, Gamepad::unknown, Gamepad::Event::min(), Gamepad::Event::max() }
+    , { EV_ABS, ABS_Z, 0, 0xFF, ConversionType::Analog, Gamepad::L2, Gamepad::unknown, 0, Gamepad::Event::max() }
+    , { EV_ABS, ABS_RZ, 0, 0xFF, ConversionType::Analog, Gamepad::R2, Gamepad::unknown, 0, Gamepad::Event::max() }
     , { EV_ABS, ABS_HAT0X, -1, 1, ConversionType::Digital, Gamepad::LEFT, Gamepad::RIGHT, 0, 1 }
     , { EV_ABS, ABS_HAT0Y, -1, 1, ConversionType::Digital, Gamepad::UP, Gamepad::DOWN, 0, 1 }
 };
 
 constexpr static const MapSort<(sizeof( unsorted ) / sizeof( MapTable ) )> sorted( unsorted );
-volatile const TableInfo xboxOneSBluetooth_0x045E02FD = sorted;
+volatile const TableInfo dualshock4_0x054C09CC = sorted;

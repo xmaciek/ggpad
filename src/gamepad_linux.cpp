@@ -31,6 +31,7 @@
 
 extern const TableInfo GamepadDefault;
 extern const TableInfo xboxOneSBluetooth_0x045E02FD;
+extern const TableInfo dualshock4_0x054C09CC;
 
 namespace {
 
@@ -38,6 +39,7 @@ TableInfo driverFixForVidPid( uint32_t vidpid )
 {
     switch ( vidpid ) {
         case 0x045E02FD: return xboxOneSBluetooth_0x045E02FD;
+        case 0x054C09CC: return dualshock4_0x054C09CC;
         default: return GamepadDefault;
     }
 }

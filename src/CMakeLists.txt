@@ -51,6 +51,7 @@ if ( GGPAD_LINUX )
     list( APPEND sources
         gamepad_linux_default.cpp
         gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
+        gamepad_linux_dualshock4_0x054C09CC.cpp
         gamepad_linux.cpp
         systemevent_linux.cpp
         wrap_udev.cpp

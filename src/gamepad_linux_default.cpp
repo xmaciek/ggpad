@@ -14,7 +14,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include <limits>
-#include <linux/input.h>
+#include <linux/input-event-codes.h>
 #include "gamepad_linux.hpp"
 
 constexpr static const MapTable unsorted[] = {
