@@ -37,5 +37,6 @@ public:
 
     void keyboard( uint32_t a_key, bool a_state );
     void mouseMove( int32_t a_deltaX, int32_t a_deltaY );
+    void mouseSet( int32_t x, int32_t y );
 
 };

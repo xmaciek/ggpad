@@ -100,6 +100,7 @@ static void setScriptForGamepad( Binding* binding, const std::filesystem::path& 
 
     script->registerFunction( "GGPAD_keyboardSet", &Script::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
     script->registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );
+    script->registerFunction( "GGPAD_mouseSet", &Script::facade<decltype(&GGPAD::mouseSet), &GGPAD::mouseSet, int, int> );
 
     script->doFile( a_scriptFile.c_str() );
 
@@ -183,12 +184,23 @@ void GGPAD::processClientMessages()
 
 void GGPAD::setKeyboard( uint32_t a_key, bool a_state )
 {
+    assert( s_instance );
+    assert( s_instance->m_systemEvent );
     s_instance->m_systemEvent->keyboard( a_key, a_state );
 }
 
-void GGPAD::mouseMove( uint32_t a_key, int32_t a_state )
+void GGPAD::mouseMove( int32_t x, int32_t y )
 {
-    s_instance->m_systemEvent->mouseMove( a_key, a_state );
+    assert( s_instance );
+    assert( s_instance->m_systemEvent );
+    s_instance->m_systemEvent->mouseMove( x, y );
+}
+
+void GGPAD::mouseSet( int32_t x, int32_t y )
+{
+    assert( s_instance );
+    assert( s_instance->m_systemEvent );
+    s_instance->m_systemEvent->mouseSet( x, y );
 }
 
 Binding* GGPAD::findById( uint64_t id )

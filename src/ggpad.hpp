@@ -55,7 +55,8 @@ public:
     ~GGPAD();
 
     static void setKeyboard( uint32_t, bool );
-    static void mouseMove( uint32_t a_axis, int32_t a_delta );
+    static void mouseMove( int32_t x, int32_t y );
+    static void mouseSet( int32_t x, int32_t y );
 
     void quit();
     int exec();

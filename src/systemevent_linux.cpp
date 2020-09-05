@@ -75,10 +75,11 @@ void flush( int32_t uinput )
 SystemEventLinux::SystemEventLinux()
 {
     LOG( LOG_DEBUG, "Initializing uinput... " );
+    errno = 0;
     m_uinput = ::open( "/dev/uinput", O_WRONLY | O_NONBLOCK );
     int e = errno;
     if ( !isValid() ) {
-        LOG( LOG_ERROR, "<b><font color=\"red\">/dev/uintput %s</font></b>", ::strerror( e ) );
+        LOG( LOG_ERROR, "<b><font color=\"red\">/dev/uinput %s</font></b>", ::strerror( e ) );
         return;
     } else {
         LOG( LOG_DEBUG, "OK" );
@@ -149,6 +150,13 @@ void SystemEventLinux::mouseMove( int32_t a_deltaX, int32_t a_deltaY )
     if ( a_deltaY != 0 ) {
         sendEvent( EV_REL, REL_Y, a_deltaY );
     }
+}
+
+// I'd like not to use QCursor, but I can't get this to work with uinput
+#include <QCursor>
+void SystemEventLinux::mouseSet( int32_t x, int32_t y )
+{
+    QCursor::setPos( x, y );
 }
 
 bool SystemEventLinux::isValid() const

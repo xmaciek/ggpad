@@ -51,6 +51,7 @@ constexpr static const char* GGPAD_KEYWORDS[] = {
     , "GGPAD_update"
     , "GGPAD_keyboardSet"
     , "GGPAD_mouseMove"
+    , "GGPAD_mouseSet"
 #define MAKE_ENUM( NAME ) , "Gamepad." #NAME
 #include "button_enum.def"
 #undef MAKE_ENUM
