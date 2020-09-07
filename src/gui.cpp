@@ -117,6 +117,48 @@ Gui::Gui( Comm* serverComm )
 
 void Gui::onSave()
 {
+    if ( !m_currentInfo ) {
+        LOG( LOG_DEBUG, "<font color=orange>No selection, this btn should be disabled</font>" );
+        return;
+    }
+
+    bool isNewScript = false;
+    std::string savePath = m_currentInfo->m_scriptPath;
+    if ( savePath.empty() ) {
+        QPointer<QFileDialog> ptr = new QFileDialog(
+            this
+            , "Save .lua script"
+            , QDir::homePath()
+            , "Lua (*.lua)"
+        );
+        ptr->setViewMode( QFileDialog::Detail );
+        ptr->setAcceptMode( QFileDialog::AcceptSave );
+        if ( !ptr->exec() ) {
+            return;
+        }
+        const QStringList fileNames = ptr->selectedFiles();
+        assert( fileNames.size() == 1 );
+        ptr.clear();
+        savePath = fileNames[ 0 ].toStdString();
+        isNewScript = true;
+    }
+
+    QTextEdit* editor = m_editorMapStack[ m_currentInfo->m_id ];
+    assert( editor );
+    QFile saveFile( savePath.c_str() );
+    if ( !saveFile.open( QIODevice::WriteOnly ) ) {
+        LOG( LOG_ERROR, "<font color=red>Failed to save file:</font> %s", savePath.c_str() );
+        return;
+    }
+
+    const std::string str = editor->toPlainText().toStdString();
+    saveFile.write( str.c_str(), str.size() );
+    if ( !isNewScript ) {
+        return;
+    }
+
+    assert( m_serverComm );
+    m_serverComm->pushToServer( Message{ Message::Type::eUpdateScriptPath, m_currentInfo->m_id, str } );
 }
 
 void Gui::onRun()
@@ -160,6 +202,7 @@ void Gui::onOpen()
         , "Lua (*.lua)"
     );
     ptr->setViewMode( QFileDialog::Detail );
+    ptr->setAcceptMode( QFileDialog::AcceptOpen );
     if ( !ptr->exec() ) {
         return;
     }
@@ -205,7 +248,7 @@ void Gui::processServerMessages()
             m_model[ msg->m_id ] = GuiControllerModel::GamepadInfo{ msg->m_id, msg->toString(), {}, true };
             m_model.refresh();
             break;
-        case Message::Type::eRunScript:
+        case Message::Type::eUpdateScriptPath:
             m_model[ msg->m_id ].m_scriptPath = msg->toPath();
             m_model.refresh();
             break;

@@ -30,6 +30,7 @@ struct Message {
         eGamepadDisconnected,
         eStopScript,
         eRunScript,
+        eUpdateScriptPath,
     };
 
     std::variant<std::monostate, std::filesystem::path, std::string> m_data{};

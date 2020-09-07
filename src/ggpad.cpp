@@ -140,7 +140,7 @@ int GGPAD::exec()
         for ( Gamepad* it : list ) {
             pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
             m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
-            m_clientComm->pushToClient( Message{ Message::Type::eRunScript, it->uid(), m_settings[ it->uid() ] } );
+            m_clientComm->pushToClient( Message{ Message::Type::eUpdateScriptPath, it->uid(), m_settings[ it->uid() ] } );
         }
 
         for ( Binding& it : m_list ) {
@@ -172,6 +172,10 @@ void GGPAD::processClientMessages()
 
             case Message::Type::eStopScript:
                 stopScript( msg->m_id );
+                break;
+
+            case Message::Type::eUpdateScriptPath:
+                m_settings[ msg->m_id ] = msg->toPath();
                 break;
 
             default:
