@@ -118,7 +118,7 @@ int Script::stackCount( vm_type* vm )
 template<>
 int Script::get<int>( vm_type* vm, std::size_t n )
 {
-    return lua_tointeger( vm, n );
+    return lua_tonumber( vm, n );
 }
 
 template <>
