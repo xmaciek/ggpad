@@ -1,3 +1,21 @@
+--  Explaination how analog axis to digital keyboard key
+--  conversion is suppoused to work.
+--  A key should be pressed equally long in frame time
+--  as axis tilt.
+--
+-- | < ------------ frame ( 50ms ) ----------- > |
+-- | < frame begin ----------------- frame end > |
+-- |                     | < axis 50% tilt       |
+-- | < key press         | < key release         |
+-- [======================.......................]
+--
+-- | < ------------ frame ( 50ms ) ----------- > |
+-- | < frame begin ----------------- frame end > |
+-- |             | < axis 30% tilt               |
+-- | < key press | < key release                 |
+-- [==============...............................]
+
+
 AxisToKeyboard = {}
 AxisToKeyboard.__index = AxisToKeyboard
 
