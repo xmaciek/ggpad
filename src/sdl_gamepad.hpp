@@ -30,7 +30,8 @@ class SDLGamepad : public Gamepad {
     std::mutex m_bottleneck{};
     std::list<Event> m_list{};
     SDL_GameController* m_gamecontroller = nullptr;
-    SDL_JoystickGUID m_guid{};
+    IdCounter m_uid{};
+    uint32_t m_vidpid = 0;
     bool m_isConnected = true;
 
 public:

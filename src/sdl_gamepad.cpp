@@ -29,8 +29,11 @@ SDLGamepad::~SDLGamepad() noexcept
 SDLGamepad::SDLGamepad( SDL_GameController* pad ) noexcept
 : m_gamecontroller{ pad }
 {
-    SDL_Joystick* joystick = SDL_GameControllerGetJoystick( m_gamecontroller );
-    m_guid = SDL_JoystickGetGUID( joystick );
+    assert( pad );
+    m_vidpid = SDL_GameControllerGetVendor( pad );
+    m_vidpid <<= 16;
+    m_vidpid |= SDL_GameControllerGetProduct( pad );
+    m_uid = m_vidpid;
 }
 
 std::string SDLGamepad::displayName() const
@@ -42,13 +45,12 @@ std::string SDLGamepad::displayName() const
 
 uint32_t SDLGamepad::vidpid() const
 {
-    return *reinterpret_cast<const uint32_t*>( &m_guid );
+    return m_vidpid;
 }
 
 uint64_t SDLGamepad::uid() const
 {
-    SDL_Joystick* joystick = SDL_GameControllerGetJoystick( m_gamecontroller );
-    return SDL_JoystickInstanceID( joystick );
+    return m_uid;
 }
 
 bool SDLGamepad::isConnected() const

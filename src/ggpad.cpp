@@ -140,7 +140,7 @@ int GGPAD::exec()
         case 2: { // connect
             SDLApp::Connected& connected = std::get<SDLApp::Connected>( event );
             list.emplace_back( connected.gamepad );
-            LOG( LOG_DEBUG, "Connecting %lu", connected.gamepad->uid() );
+            LOG( LOG_DEBUG, "Connecting %08lX", connected.gamepad->uid() );
         } break;
 
         case 3: // disconnect
