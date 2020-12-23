@@ -32,7 +32,7 @@ set( link_libraries
 
 set( sources
     allocator.cpp
-    barrier.cpp
+    bottleneck.cpp
     binding.cpp
     comm.cpp
     ggpad.cpp

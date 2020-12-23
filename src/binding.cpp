@@ -63,7 +63,7 @@ void Binding::pollLoop()
         }
         for ( const Gamepad::Event& it : events ) {
             m_queue.emplace( it );
-            m_scriptBarrier.notify();
+            m_scriptBottleneck.notify();
         }
     }
 
@@ -73,7 +73,7 @@ void Binding::eventLoop()
 {
     std::optional<Gamepad::Event> ev;
     while ( m_isRunningScript.load() ) {
-        m_scriptBarrier.wait_for( 5ms );
+        m_scriptBottleneck.wait_for( 5ms );
 
         while ( m_isRunningScript.load() && ( ev = m_queue.pop() ) ) {
             const Gamepad::Event& it = *ev;

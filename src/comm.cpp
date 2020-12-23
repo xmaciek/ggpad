@@ -71,20 +71,20 @@ std::optional<Message> Comm::popFromServer()
 
 void Comm::notifyClient()
 {
-    m_barrierB.notify();
+    m_bottleneckB.notify();
 }
 
 void Comm::notifyServer()
 {
-    m_barrierA.notify();
+    m_bottleneckA.notify();
 }
 
 void Comm::waitForClient( const std::chrono::high_resolution_clock::duration& d )
 {
-    m_barrierA.wait_for( d );
+    m_bottleneckA.wait_for( d );
 }
 
 void Comm::waitForServer( const std::chrono::high_resolution_clock::duration& d )
 {
-    m_barrierB.wait_for( d );
+    m_bottleneckB.wait_for( d );
 }

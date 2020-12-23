@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "barrier.hpp"
+#include "bottleneck.hpp"
 #include "queue.hpp"
 
 #include <cstdint>
@@ -50,8 +50,8 @@ struct Message {
 class Comm {
     Queue<Message> m_queueA{};
     Queue<Message> m_queueB{};
-    Barrier m_barrierA{};
-    Barrier m_barrierB{};
+    Bottleneck m_bottleneckA{};
+    Bottleneck m_bottleneckB{};
 
 public:
     ~Comm() noexcept = default;

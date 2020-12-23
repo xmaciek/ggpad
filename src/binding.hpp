@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "barrier.hpp"
+#include "bottleneck.hpp"
 #include "gamepad.hpp"
 #include "macros.hpp"
 #include "queue.hpp"
@@ -38,7 +38,7 @@ class Binding {
     std::optional<std::thread> m_eventThread;
     std::mutex m_threadOperation;
     std::mutex m_mutexScript;
-    Barrier m_scriptBarrier;
+    Bottleneck m_scriptBottleneck;
 
     std::filesystem::path m_currentScriptFile;
 

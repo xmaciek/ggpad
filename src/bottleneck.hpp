@@ -1,4 +1,4 @@
-// GGPAD Copyright 2019 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,18 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "barrier.hpp"
 
-Barrier::Barrier()
-: m_ul( m_mutex )
-{}
+#pragma once
 
-void Barrier::notify()
-{
-    m_cv.notify_all();
-}
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include "macros.hpp"
 
-void Barrier::wait_for( const std::chrono::high_resolution_clock::duration& d )
-{
-    m_cv.wait_for( m_ul, d );
-}
+class Bottleneck {
+    DISABLE_COPY( Bottleneck );
+    std::condition_variable m_cv;
+    std::mutex m_mutex;
+    std::unique_lock<std::mutex> m_ul;
+
+public:
+    Bottleneck();
+    void notify();
+    void wait_for( const std::chrono::high_resolution_clock::duration& );
+};
