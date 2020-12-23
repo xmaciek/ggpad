@@ -23,7 +23,7 @@
 #include "binding.hpp"
 #include "comm.hpp"
 #include "macros.hpp"
-#include "watcher.hpp"
+#include "sdlapp.hpp"
 #include "settings.hpp"
 #include "systemevent.hpp"
 
@@ -32,13 +32,12 @@ class GGPAD {
 
 private:
     static GGPAD* s_instance;
+    SDLApp m_sdlApp{};
     Settings m_settings;
 
     bool m_isRunning = true;
 
     std::list<Binding> m_list;
-
-    std::unique_ptr<Watcher> m_deviceWatcher;
     std::unique_ptr<SystemEvent> m_systemEvent;
 
     Comm* m_clientComm = nullptr;

@@ -21,8 +21,6 @@
 #include "ggpad.hpp"
 #include "gamepad.hpp"
 #include "log.hpp"
-#include "watcher_udev.hpp"
-
 
 static const std::vector<Script::Record> GAMEPAD_TABLE {
     { "unknown", 0 }
@@ -56,7 +54,6 @@ GGPAD::GGPAD( Comm* clientComm )
         s_instance = this;
     }
     m_systemEvent = std::make_unique<SystemEvent>();
-    m_deviceWatcher = std::make_unique<WatcherUDev>();
 }
 
 GGPAD::~GGPAD()
@@ -127,29 +124,61 @@ void GGPAD::quit()
 int GGPAD::exec()
 {
     m_threadClientMessages = std::thread( &GGPAD::processClientMessages, this );
-    std::list<Gamepad*> list = m_deviceWatcher->currentDevices();
-    for ( Gamepad* it : list ) {
-        pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
-        m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
-        m_clientComm->pushToClient( Message{ Message::Type::eRunScript, it->uid(), m_settings[ it->uid() ] } );
-    }
 
     while ( m_isRunning ) {
-        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
-        list = m_deviceWatcher->newDevices();
+        std::list<Gamepad*> list;
+        std::optional<uint64_t> toDisconnect{};
+        SDLApp::Event event = m_sdlApp.next();
+
+        switch ( event.index() ) {
+        case 0: break; // monostate
+        case 1:
+            std::this_thread::sleep_for( std::get<SDLApp::SleepFor>( event ).value );
+            m_sdlApp.update();
+            break;
+
+        case 2: { // connect
+            SDLApp::Connected& connected = std::get<SDLApp::Connected>( event );
+            list.emplace_back( connected.gamepad );
+            LOG( LOG_DEBUG, "Connecting %lu", connected.gamepad->uid() );
+        } break;
+
+        case 3: // disconnect
+            toDisconnect = std::get<SDLApp::Disconnected>( event ).id;
+            LOG( LOG_DEBUG, "Disconnecting %lu", *toDisconnect );
+            break;
+
+        case 4: {
+//             const SDLApp::Input& input = std::get<SDLApp::Input>( event );
+//             for ( Gamepad* it : m_gamepads ) {
+//                 if ( it->id() != input.id ) continue;
+//                 it->push( input.button, input.value );
+//                 break;
+            }
+        }
+
         for ( Gamepad* it : list ) {
             pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
             m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
             m_clientComm->pushToClient( Message{ Message::Type::eUpdateScriptPath, it->uid(), m_settings[ it->uid() ] } );
         }
 
+        if ( !toDisconnect ) {
+            continue;
+        }
+        bool didDisconnect = false;
         for ( Binding& it : m_list ) {
+            if ( *toDisconnect == it.gamepadId() ) {
+                it.disconnect();
+                didDisconnect = true;
+            }
             const bool stateChanged = it.connectionStateChanged();
             it.scriptStateChanged();
             if ( stateChanged && !it.connectionState() ) {
                 m_clientComm->pushToClient( Message{ Message::Type::eGamepadDisconnected, it.m_gamepadId } );
             }
         }
+        assert( toDisconnect );
     }
 
     if ( m_threadClientMessages.joinable() ) {
@@ -214,7 +243,7 @@ Binding* GGPAD::findById( uint64_t id )
             return &it;
         }
     }
-    LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
+    LOG( LOG_ERROR, "Failed to find binding for gamepad id %lu", id );
     return nullptr;
 }
 
@@ -225,7 +254,7 @@ void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )
     Binding* binding = findById( id );
     assert( binding );
     if ( !binding ) {
-        LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
+        LOG( LOG_ERROR, "Failed to find binding for gamepad id %lu", id );
         return;
     }
     setScriptForGamepad( binding, path );
@@ -240,7 +269,7 @@ void GGPAD::stopScript( uint64_t id )
     Binding* binding = findById( id );
     assert( binding );
     if ( !binding ) {
-        LOG( LOG_ERROR, "Failed to find binding for gamepad id %llu", id );
+        LOG( LOG_ERROR, "Failed to find binding for gamepad id %lu", id );
         return;
     }
     binding->stopScript();

@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,34 +16,32 @@
 #pragma once
 
 #include "gamepad.hpp"
+
+#include <mutex>
+
 #include "idcounter.hpp"
 #include "macros.hpp"
-#include "maptable_linux.hpp"
 
-#include <cstdint>
+#include <SDL2/SDL.h>
 
-class GamepadLinux : public Gamepad {
-    DISABLE_COPY( GamepadLinux )
+class SDLGamepad : public Gamepad {
+    DISABLE_COPY( SDLGamepad );
 
-public:
-    using state_type = value_type[ Gamepad::max ];
-
-private:
-    int m_fd = -1;
-    uint32_t m_vidpid = 0;
-    IdCounter m_uid;
-    state_type m_state{};
-    TableInfo m_tableInfo;
-    std::string m_displayName;
+    std::mutex m_bottleneck{};
+    std::list<Event> m_list{};
+    SDL_GameController* m_gamecontroller = nullptr;
+    SDL_JoystickGUID m_guid{};
+    bool m_isConnected = true;
 
 public:
-    GamepadLinux( const char* a_devPath );
-    virtual ~GamepadLinux();
-
+    ~SDLGamepad() noexcept;
+    SDLGamepad( SDL_GameController* ) noexcept;
     virtual uint32_t vidpid() const override;
     virtual uint64_t uid() const override;
-
     virtual bool isConnected() const override;
-    virtual std::list<Gamepad::Event> pollChanges() override;
+    virtual std::list<Event> pollChanges() override;
     virtual std::string displayName() const override;
+    virtual void disconnect() override;
+
+    void push( Gamepad::Button, int16_t );
 };

@@ -18,15 +18,16 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 
 include( "${CMAKE_SOURCE_DIR}/platforms.cmake" )
 
+find_package( SDL2 REQUIRED )
 find_package( Threads REQUIRED )
 find_package( Qt5Widgets REQUIRED )
 include( "${CMAKE_SOURCE_DIR}/lua.cmake" )
-include( "${CMAKE_SOURCE_DIR}/libudev.cmake" )
 
 set( link_libraries
     Threads::Threads
     Lua::Lua
     Qt5::Widgets
+    SDL2::SDL2
 )
 
 set( sources
@@ -45,20 +46,15 @@ set( sources
     logview.cpp
     main.cpp
     settings.cpp
+    sdlapp.cpp
+    sdl_gamepad.cpp
 )
 
 if ( GGPAD_LINUX )
     list( APPEND sources
-        gamepad_linux_default.cpp
-        gamepad_linux_xbox_one_s_bluetooth_0x045E02FD.cpp
-        gamepad_linux_dualshock4_0x054C09CC.cpp
-        gamepad_linux.cpp
         systemevent_linux.cpp
-        wrap_udev.cpp
-        watcher_udev.cpp
     )
     list( APPEND link_libraries
-        Udev::Udev
         "stdc++fs"
     )
 endif()

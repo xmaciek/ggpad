@@ -236,3 +236,15 @@ std::filesystem::path Binding::currentScriptFile() const
 {
     return m_currentScriptFile;
 }
+
+void Binding::disconnect()
+{
+    if ( m_gamepad ) {
+        m_gamepad->disconnect();
+    }
+}
+
+uint64_t Binding::gamepadId() const
+{
+    return m_gamepad ? m_gamepad->uid() : 0xfefefefe;
+}

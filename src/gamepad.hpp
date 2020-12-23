@@ -36,7 +36,7 @@ public:
     };
 
 
-    typedef struct [[gnu::packed]] {
+    struct [[gnu::packed]] Event {
         Button button{};
         value_type value{};
         constexpr static value_type min() { return std::numeric_limits<value_type>::min() + 1; }
@@ -45,7 +45,15 @@ public:
         int16_t _type{};
         int16_t _code{};
         int32_t _value{};
-    } Event;
+
+        Event() noexcept = default;
+        inline Event( Button b, value_type v ) noexcept
+        : button{ b }
+        , value{ v }
+        {
+        }
+
+    };
 
     Gamepad() = default;
     virtual ~Gamepad() = default;
@@ -57,4 +65,5 @@ public:
     virtual std::list<Event> pollChanges() = 0;
 
     virtual std::string displayName() const = 0;
+    virtual void disconnect() {}
 };

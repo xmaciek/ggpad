@@ -79,6 +79,8 @@ public:
     bool scriptStateChanged();
     std::string gamepadName() const;
     std::string scriptStatusAsText() const;
+    uint64_t gamepadId() const;
+    void disconnect();
 
     void startScript();
     void startPoll();
