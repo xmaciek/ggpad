@@ -51,17 +51,7 @@ constexpr static const char* GGPAD_KEYWORDS[] = {
     , "GGPAD_keyboardSet"
     , "GGPAD_mouseMove"
     , "GGPAD_mouseSet"
-#define MAKE_ENUM( NAME ) , "Gamepad." #NAME
-#include "button_enum.def"
-#undef MAKE_ENUM
-#define MAKE_ENUM( NAME, VALUE ) , "Keyboard." #NAME
-#include "key_enum.def"
-#undef MAKE_ENUM
-#define MAKE_ENUM( NAME, VALUE ) , "Mouse." #NAME
-#define MAKE_ENUM2( NAME, VALUE ) , "Mouse." #NAME
-#include "mouse_enum.def"
-#undef MAKE_ENUM2
-#undef MAKE_ENUM
+// TODO: restore buttons highlight
 };
 
 constexpr static const char* OBSOLETE_KEWORDS[] = {
