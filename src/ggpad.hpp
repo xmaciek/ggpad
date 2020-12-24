@@ -48,6 +48,7 @@ private:
     void stopScript( uint64_t id );
 
     Binding* findById( uint64_t );
+    Binding* findByRuntimeId( Gamepad::RuntimeId );
 
 public:
     GGPAD( Comm* );

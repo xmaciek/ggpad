@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <filesystem>
@@ -121,13 +122,24 @@ void GGPAD::quit()
     m_settings.save();
 }
 
+static Binding* findBindingForId( std::list<Binding>& list, int32_t id )
+{
+    auto it = std::find_if( list.begin(), list.end(),
+        [id]( const Binding& b )
+        {
+            return b.gamepadId() == id;
+        }
+    );
+    return it != list.end() ? &(*it) : nullptr;
+}
+
 int GGPAD::exec()
 {
     m_threadClientMessages = std::thread( &GGPAD::processClientMessages, this );
 
     while ( m_isRunning ) {
-        std::list<Gamepad*> list;
-        std::optional<uint64_t> toDisconnect{};
+        Gamepad* connectedGamepad = nullptr;
+        Gamepad::RuntimeId toDisconnect{};
         SDLApp::Event event = m_sdlApp.next();
 
         switch ( event.index() ) {
@@ -139,36 +151,41 @@ int GGPAD::exec()
 
         case 2: { // connect
             SDLApp::Connected& connected = std::get<SDLApp::Connected>( event );
-            list.emplace_back( connected.gamepad );
+            connectedGamepad = connected.gamepad;
             LOG( LOG_DEBUG, "Connecting %08lX", connected.gamepad->uid() );
         } break;
 
         case 3: // disconnect
             toDisconnect = std::get<SDLApp::Disconnected>( event ).id;
-            LOG( LOG_DEBUG, "Disconnecting %lu", *toDisconnect );
+            LOG( LOG_DEBUG, "Disconnecting %u", toDisconnect.value );
             break;
 
         case 4: {
-//             const SDLApp::Input& input = std::get<SDLApp::Input>( event );
-//             for ( Gamepad* it : m_gamepads ) {
-//                 if ( it->id() != input.id ) continue;
-//                 it->push( input.button, input.value );
-//                 break;
+            const SDLApp::Input& input = std::get<SDLApp::Input>( event );
+            Binding* binding = findByRuntimeId( input.id );
+            if ( binding ) {
+                binding->pushEvent( input.value );
             }
+        } break;
         }
 
-        for ( Gamepad* it : list ) {
-            pushNewBinding( it, &m_list, m_settings[ it->uid() ] );
-            m_clientComm->pushToClient( Message{ Message::Type::eGamepadConnected, it->uid(), it->displayName() } );
-            m_clientComm->pushToClient( Message{ Message::Type::eUpdateScriptPath, it->uid(), m_settings[ it->uid() ] } );
+        if ( connectedGamepad ) {
+            pushNewBinding( connectedGamepad, &m_list, m_settings[ connectedGamepad->uid() ] );
+            m_clientComm->pushToClient( Message{
+                Message::Type::eGamepadConnected,
+                connectedGamepad->uid(),
+                connectedGamepad->displayName()
+            } );
+            m_clientComm->pushToClient( Message{
+                Message::Type::eUpdateScriptPath,
+                connectedGamepad->uid(),
+                m_settings[ connectedGamepad->uid() ]
+            } );
         }
 
-        if ( !toDisconnect ) {
-            continue;
-        }
         bool didDisconnect = false;
         for ( Binding& it : m_list ) {
-            if ( *toDisconnect == it.gamepadId() ) {
+            if ( toDisconnect == it.gamepadRuntimeId() ) {
                 it.disconnect();
                 didDisconnect = true;
             }
@@ -178,7 +195,6 @@ int GGPAD::exec()
                 m_clientComm->pushToClient( Message{ Message::Type::eGamepadDisconnected, it.m_gamepadId } );
             }
         }
-        assert( toDisconnect );
     }
 
     if ( m_threadClientMessages.joinable() ) {
@@ -245,6 +261,17 @@ Binding* GGPAD::findById( uint64_t id )
     }
     LOG( LOG_ERROR, "Failed to find binding for gamepad id %lu", id );
     return nullptr;
+}
+
+Binding* GGPAD::findByRuntimeId( Gamepad::RuntimeId rid )
+{
+    auto it = std::find_if( m_list.begin(), m_list.end(),
+        [rid]( const Binding& b )
+        {
+            return b.gamepadRuntimeId() == rid;
+        }
+    );
+    return it != m_list.end() ? &*it : nullptr;
 }
 
 void GGPAD::runScript( uint64_t id, const std::filesystem::path& path )

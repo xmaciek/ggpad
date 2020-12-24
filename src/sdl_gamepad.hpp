@@ -31,6 +31,7 @@ class SDLGamepad : public Gamepad {
     std::list<Event> m_list{};
     SDL_GameController* m_gamecontroller = nullptr;
     IdCounter m_uid{};
+    RuntimeId m_runtimeId{};
     uint32_t m_vidpid = 0;
     bool m_isConnected = true;
 
@@ -39,10 +40,8 @@ public:
     SDLGamepad( SDL_GameController* ) noexcept;
     virtual uint32_t vidpid() const override;
     virtual uint64_t uid() const override;
+    virtual RuntimeId runtimeId() const override;
     virtual bool isConnected() const override;
-    virtual std::list<Event> pollChanges() override;
     virtual std::string displayName() const override;
     virtual void disconnect() override;
-
-    void push( Gamepad::Button, int16_t );
 };

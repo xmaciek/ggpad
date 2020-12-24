@@ -14,8 +14,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include <chrono>
-#include <mutex>
-#include <vector>
 #include <variant>
 
 #include "macros.hpp"
@@ -24,14 +22,6 @@
 
 class SDLApp {
     DISABLE_COPY( SDLApp );
-
-    struct LocalGamepad {
-        LocalGamepad( int, SDLGamepad* ) noexcept;
-        int m_sdlId = 0;
-        SDLGamepad* m_gamepad = nullptr;
-    };
-
-    std::vector<LocalGamepad> m_gamepads{};
 
 public:
     struct SleepFor {
@@ -43,13 +33,12 @@ public:
     };
 
     struct Disconnected {
-        int32_t id = 0;
+        Gamepad::RuntimeId id{};
     };
 
     struct Input {
-        int32_t id = 0;
-        Gamepad::Button button{};
-        int16_t value = 0;
+        Gamepad::RuntimeId id{};
+        Gamepad::Event value{};
     };
 
     using Event = std::variant< std::monostate

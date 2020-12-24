@@ -35,6 +35,14 @@ public:
         , max
     };
 
+    struct RuntimeId {
+        int32_t value = std::numeric_limits<int32_t>::max();
+
+        constexpr bool operator == ( RuntimeId rid ) noexcept
+        {
+            return value == rid.value;
+        }
+    };
 
     struct [[gnu::packed]] Event {
         Button button{};
@@ -60,10 +68,8 @@ public:
 
     virtual uint32_t vidpid() const = 0;
     virtual uint64_t uid() const = 0;
-
+    virtual RuntimeId runtimeId() const = 0;
     virtual bool isConnected() const = 0;
-    virtual std::list<Event> pollChanges() = 0;
-
     virtual std::string displayName() const = 0;
     virtual void disconnect() {}
 };

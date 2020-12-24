@@ -47,26 +47,13 @@ void Binding::updateLoop()
     }
 }
 
-void Binding::pollLoop()
+void Binding::pushEvent( const Gamepad::Event& event )
 {
-    assert( m_gamepad );
-    while ( m_isRunning.load() ) {
-        std::list<Gamepad::Event> events = m_gamepad->pollChanges();
-        if ( events.empty() ) {
-            continue;
-        }
-        // Ignore events when script is not running to avoid event pilling up on binding side.
-        // The device should still be polling as nothing happened. There might be internal buffer (linux has)
-        // which we don't want to process when script has been launched.
-        if ( !m_isRunningScript.load() ) {
-            continue;
-        }
-        for ( const Gamepad::Event& it : events ) {
-            m_queue.emplace( it );
-            m_scriptBottleneck.notify();
-        }
+    if ( !m_isRunningScript.load() ) {
+        return;
     }
-
+    m_queue.emplace( event );
+    m_scriptBottleneck.notify();
 }
 
 void Binding::eventLoop()
@@ -163,12 +150,7 @@ void Binding::stopScript()
 
 void Binding::stopPoll()
 {
-    std::lock_guard<std::mutex> lg( m_threadOperation );
     m_isRunning.store( false );
-    if ( m_pollThread && m_pollThread->joinable() ) {
-        m_pollThread->join();
-    }
-    m_pollThread.reset();
 }
 
 void Binding::startScript()
@@ -186,14 +168,7 @@ void Binding::startScript()
 
 void Binding::startPoll()
 {
-    std::lock_guard<std::mutex> lg( m_threadOperation );
-    bool expected = false;
-    if ( !m_isRunning.compare_exchange_weak( expected, true ) ) {
-        return;
-    }
-    assert( !m_pollThread );
-    m_pollThread.emplace( &Binding::pollLoop, this );
-
+    m_isRunning.store( true );
 }
 
 void Binding::setScript( Script* sc )
@@ -247,4 +222,9 @@ void Binding::disconnect()
 uint64_t Binding::gamepadId() const
 {
     return m_gamepad ? m_gamepad->uid() : 0xfefefefe;
+}
+
+Gamepad::RuntimeId Binding::gamepadRuntimeId() const
+{
+    return m_gamepad ? m_gamepad->runtimeId() : Gamepad::RuntimeId{};
 }

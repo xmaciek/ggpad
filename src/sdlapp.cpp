@@ -18,7 +18,7 @@
 #include <SDL2/SDL.h>
 
 #include <cassert>
-#include <algorithm>
+#include <string_view>
 
 #include "sdl_gamepad.hpp"
 
@@ -67,9 +67,6 @@ SDLApp::~SDLApp() noexcept
 
 SDLApp::SDLApp() noexcept
 {
-    [[maybe_unused]]
-    const bool b = SDL_SetHint( "SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD", "0" );
-    assert( b );
     SDL_InitSubSystem( SDL_INIT_GAMECONTROLLER );
 }
 
@@ -81,62 +78,35 @@ SDLApp::Event SDLApp::next() noexcept
     }
 
     switch ( event.type ) {
-    case SDL_CONTROLLERDEVICEADDED: {
-        SDL_GameController* gamepad = SDL_GameControllerOpen( event.cdevice.which );
-        std::string name = SDL_GameControllerName( gamepad );
-        std::transform( name.begin(), name.end(), name.begin(), [](char c){ return (char)std::tolower(c); } );
-        if ( name.find( "virtual" ) != std::string::npos ) {
-            SDL_GameControllerClose( gamepad );
-            return std::monostate{};
+    case SDL_CONTROLLERDEVICEADDED:
+        if ( !SDL_GetHintBoolean( "SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD", SDL_FALSE ) ) {
+            const char* name = SDL_GameControllerNameForIndex( event.cdevice.which );
+            const std::string_view namesv = name ? name : "";
+            if ( namesv == "Steam Virtual Gamepad" ) {
+                return std::monostate{};
+            }
         }
+        return SDLApp::Connected{ new SDLGamepad{ SDL_GameControllerOpen( event.cdevice.which ) } };
 
-        SDL_Joystick* joystick = SDL_GameControllerGetJoystick( gamepad );
-        m_gamepads.emplace_back(
-            SDL_JoystickInstanceID( joystick ),
-            new SDLGamepad{ gamepad }
-        );
-        return SDLApp::Connected{ m_gamepads.back().m_gamepad };
-    }
     case SDL_CONTROLLERDEVICEREMOVED:
-        m_gamepads.erase(
-            std::remove_if(
-                m_gamepads.begin(),
-                m_gamepads.end(),
-                [which=event.cdevice.which]( const LocalGamepad& s )
-                {
-                    return s.m_sdlId == which;
-                } ),
-            m_gamepads.end()
-        );
         return SDLApp::Disconnected{ event.cdevice.which };
 
     case SDL_CONTROLLERBUTTONDOWN:
-    case SDL_CONTROLLERBUTTONUP: {
-        const Gamepad::Button what = remapButton( event.cbutton.button );
-        auto it = std::find_if( m_gamepads.begin(), m_gamepads.end(),
-            [which = event.cbutton.which]( const LocalGamepad& s )
-            {
-                return s.m_sdlId == which;
+    case SDL_CONTROLLERBUTTONUP:
+        return SDLApp::Input{
+            Gamepad::RuntimeId{ event.cbutton.which },
+            Gamepad::Event{
+                remapButton( event.cbutton.button ),
+                event.cbutton.state
             }
-        );
-        if ( it != m_gamepads.cend() ) {
-            it->m_gamepad->push( what, event.cbutton.state );
-        }
-        return SDLApp::Input{ event.cbutton.which, what, event.cbutton.state };
-    }
-    case SDL_CONTROLLERAXISMOTION: {
-        const Gamepad::Button what = remapAxis( event.caxis.axis );
-        auto it = std::find_if( m_gamepads.begin(), m_gamepads.end(),
-            [which = event.cbutton.which]( const LocalGamepad& s )
-            {
-                return s.m_sdlId == which;
-            }
-        );
-        if ( it != m_gamepads.cend() ) {
-            it->m_gamepad->push( what, event.caxis.value );
-        }
-        return SDLApp::Input{ event.caxis.which, what, event.caxis.value };
-    }
+        };
+    case SDL_CONTROLLERAXISMOTION:
+        return SDLApp::Input{
+            Gamepad::RuntimeId{ event.caxis.which },
+            Gamepad::Event{
+                remapAxis( event.caxis.axis ),
+                event.caxis.value }
+        };
 
     default:
         return std::monostate{};
@@ -147,10 +117,4 @@ SDLApp::Event SDLApp::next() noexcept
 void SDLApp::update() noexcept
 {
     SDL_PumpEvents();
-}
-
-SDLApp::LocalGamepad::LocalGamepad( int id, SDLGamepad* pad ) noexcept
-: m_sdlId{ id }
-, m_gamepad{ pad }
-{
 }

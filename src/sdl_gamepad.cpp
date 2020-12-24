@@ -34,6 +34,8 @@ SDLGamepad::SDLGamepad( SDL_GameController* pad ) noexcept
     m_vidpid <<= 16;
     m_vidpid |= SDL_GameControllerGetProduct( pad );
     m_uid = m_vidpid;
+    SDL_Joystick* joystick = SDL_GameControllerGetJoystick( pad );
+    m_runtimeId.value = SDL_JoystickInstanceID( joystick );
 }
 
 std::string SDLGamepad::displayName() const
@@ -53,6 +55,11 @@ uint64_t SDLGamepad::uid() const
     return m_uid;
 }
 
+Gamepad::RuntimeId SDLGamepad::runtimeId() const
+{
+    return m_runtimeId;
+}
+
 bool SDLGamepad::isConnected() const
 {
     return m_isConnected;
@@ -61,18 +68,4 @@ bool SDLGamepad::isConnected() const
 void SDLGamepad::disconnect()
 {
     m_isConnected = false;
-}
-
-std::list<Gamepad::Event> SDLGamepad::pollChanges()
-{
-    std::list<Event> ret{};
-    std::lock_guard<std::mutex> lg{ m_bottleneck };
-    std::swap( ret, m_list );
-    return ret;
-}
-
-void SDLGamepad::push( Gamepad::Button button, int16_t v )
-{
-    std::lock_guard<std::mutex> lg{ m_bottleneck };
-    m_list.emplace_back( button, v );
 }
