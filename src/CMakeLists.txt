@@ -51,6 +51,7 @@ set( sources
 )
 
 set( headers
+    actuator.hpp
     allocator.hpp
     binding.hpp
     bottleneck.hpp
@@ -60,6 +61,7 @@ set( headers
     gui_syntax_highlight.hpp
     gui.hpp
     idcounter.hpp
+    keyboard.hpp
     log.hpp
     logview.hpp
     lua_function.hpp
@@ -79,6 +81,7 @@ if ( GGPAD_LINUX )
     )
     list( APPEND headers
         systemevent_linux.hpp
+        systemevent_linux_table.hpp
     )
     list( APPEND link_libraries
         "stdc++fs"
