@@ -20,6 +20,7 @@
 #include <list>
 #include <string>
 
+#include "actuator.hpp"
 #include "macros.hpp"
 
 class Gamepad {
@@ -27,13 +28,6 @@ class Gamepad {
 
 public:
     using value_type = int16_t;
-    enum Button : int16_t {
-        unknown
-#define MAKE_ENUM( E ) , E
-#include "button_enum.def"
-#undef MAKE_ENUM
-        , max
-    };
 
     struct RuntimeId {
         int32_t value = std::numeric_limits<int32_t>::max();
@@ -45,11 +39,11 @@ public:
     };
 
     struct Event {
-        Button button{};
+        Actuator button{};
         value_type value{};
 
         Event() noexcept = default;
-        inline Event( Button b, value_type v ) noexcept
+        inline Event( Actuator b, value_type v ) noexcept
         : button{ b }
         , value{ v }
         {

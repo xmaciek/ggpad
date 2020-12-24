@@ -45,8 +45,3 @@ function GGPAD_update( a_deltaTime )
     mouse.y = mouse.y - y
     GGPAD_mouseMove( x, y )
 end
-
-GGPAD_nativeEvent_ = function( atype, code, value )
-    local map = {}
-    if ( not map[ code ] ) then print( atype .. " " .. code .. " " .. value ) end
-end

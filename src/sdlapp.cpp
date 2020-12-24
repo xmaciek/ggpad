@@ -20,40 +20,41 @@
 #include <cassert>
 #include <string_view>
 
+#include "actuator.hpp"
 #include "sdl_gamepad.hpp"
 
-static Gamepad::Button remapAxis( uint8_t axis )
+static Actuator remapAxis( uint8_t axis )
 {
     switch ( axis ) {
-    case SDL_CONTROLLER_AXIS_LEFTX: return Gamepad::Button::LX;
-    case SDL_CONTROLLER_AXIS_LEFTY: return Gamepad::Button::LY;
-    case SDL_CONTROLLER_AXIS_RIGHTX: return Gamepad::Button::RX;
-    case SDL_CONTROLLER_AXIS_RIGHTY: return Gamepad::Button::RY;
-    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return Gamepad::Button::L2;
-    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return Gamepad::Button::R2;
+    case SDL_CONTROLLER_AXIS_LEFTX: return Actuator::LX;
+    case SDL_CONTROLLER_AXIS_LEFTY: return Actuator::LY;
+    case SDL_CONTROLLER_AXIS_RIGHTX: return Actuator::RX;
+    case SDL_CONTROLLER_AXIS_RIGHTY: return Actuator::RY;
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return Actuator::L2;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return Actuator::R2;
     default:
         assert( !"unhandled enum" );
         return {};
     }
 }
 
-static Gamepad::Button remapButton( uint8_t button )
+static Actuator remapButton( uint8_t button )
 {
     switch ( button ) {
-    case SDL_CONTROLLER_BUTTON_A: return Gamepad::Button::A;
-    case SDL_CONTROLLER_BUTTON_B: return Gamepad::Button::B;
-    case SDL_CONTROLLER_BUTTON_X: return Gamepad::Button::X;
-    case SDL_CONTROLLER_BUTTON_Y: return Gamepad::Button::Y;
-    case SDL_CONTROLLER_BUTTON_DPAD_UP: return Gamepad::Button::UP;
-    case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return Gamepad::Button::DOWN;
-    case SDL_CONTROLLER_BUTTON_DPAD_LEFT: return Gamepad::Button::LEFT;
-    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return Gamepad::Button::RIGHT;
-    case SDL_CONTROLLER_BUTTON_BACK: return Gamepad::Button::SELECT;
-    case SDL_CONTROLLER_BUTTON_START: return Gamepad::Button::START;
-    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: return Gamepad::Button::L1;
-    case SDL_CONTROLLER_BUTTON_LEFTSTICK: return Gamepad::Button::L3;
-    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return Gamepad::Button::R1;
-    case SDL_CONTROLLER_BUTTON_RIGHTSTICK: return Gamepad::Button::R3;
+    case SDL_CONTROLLER_BUTTON_A: return Actuator::A;
+    case SDL_CONTROLLER_BUTTON_B: return Actuator::B;
+    case SDL_CONTROLLER_BUTTON_X: return Actuator::X;
+    case SDL_CONTROLLER_BUTTON_Y: return Actuator::Y;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP: return Actuator::UP;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return Actuator::DOWN;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT: return Actuator::LEFT;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return Actuator::RIGHT;
+    case SDL_CONTROLLER_BUTTON_BACK: return Actuator::SELECT;
+    case SDL_CONTROLLER_BUTTON_START: return Actuator::START;
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: return Actuator::L1;
+    case SDL_CONTROLLER_BUTTON_LEFTSTICK: return Actuator::L3;
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return Actuator::R1;
+    case SDL_CONTROLLER_BUTTON_RIGHTSTICK: return Actuator::R3;
     default:
         assert( !"unhandled enum" );
         return {};

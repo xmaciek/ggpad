@@ -41,15 +41,17 @@ Script::~Script() noexcept
     lua_close( m_vm );
 }
 
-void Script::bindTable( const char* a_name, const std::vector<Script::Record>& a_table )
+void Script::bindTable( std::string_view name, const Record* begin, const Record* end )
 {
     assert( m_vm );
     lua_newtable( m_vm );
-    for ( const Script::Record& it : a_table ) {
-        lua_pushinteger( m_vm, it.value );
-        lua_setfield( m_vm, Address::eKey, it.name );
+    for ( const Record* it = begin; it != end; ++it ) {
+        lua_pushinteger( m_vm, it->value );
+        lua_setfield( m_vm, Address::eKey, it->name.data() );
     }
-    lua_setglobal( m_vm, a_name );
+    lua_setglobal( m_vm, name.data() );
+    const int stackCount = lua_gettop( m_vm );
+    assert( stackCount == 0 );
 }
 
 void Script::doFile( const std::filesystem::path& a_fileName )

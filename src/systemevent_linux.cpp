@@ -25,6 +25,8 @@
 #include <unistd.h>
 
 #include "log.hpp"
+#include "systemevent_linux_table.hpp"
+
 
 namespace {
 
@@ -37,16 +39,11 @@ bool enableInputCodes( int32_t uinput )
         return false;
     }
 
-    #define MAKE_ENUM( A, B ) ::ioctl( uinput, UI_SET_KEYBIT, KEY_ ## B );
-    #include "key_enum.def"
-    #undef MAKE_ENUM
-
-    #define MAKE_ENUM( A, B ) ::ioctl( uinput, UI_SET_KEYBIT, BTN_ ## B );
-    #define MAKE_ENUM2( A, B ) ::ioctl( uinput, UI_SET_RELBIT, REL_ ## B );
-    #include "mouse_enum.def"
-    #undef MAKE_ENUM2
-    #undef MAKE_ENUM
-
+    for ( uint16_t it : g_keyButtonLUT ) {
+        ::ioctl( uinput, UI_SET_KEYBIT, it );
+    }
+    ::ioctl( uinput, UI_SET_RELBIT, REL_X );
+    ::ioctl( uinput, UI_SET_RELBIT, REL_Y );
     return true;
 }
 
@@ -139,7 +136,12 @@ void SystemEventLinux::sendEvent( uint32_t type, uint32_t code, int32_t value )
 
 void SystemEventLinux::keyboard( uint32_t key, bool state )
 {
-    sendEvent( EV_KEY, key, state );
+    const size_t index = std::min<size_t>( key, std::size( g_keyButtonLUT ) );
+    if ( index == std::size( g_keyButtonLUT ) ) {
+        LOG( LOG_ERROR, "Key code %u not supported", key );
+        return;
+    }
+    sendEvent( EV_KEY, g_keyButtonLUT[ index ], state );
 }
 
 void SystemEventLinux::mouseMove( int32_t a_deltaX, int32_t a_deltaY )

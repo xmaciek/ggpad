@@ -56,17 +56,22 @@ public:
     using Variant = std::variant<std::string,int64_t>;
     using Pair = std::pair<Variant,Variant>;
 
-    typedef struct {
-        const char* name;
+    struct Record {
         int value;
-    } Record;
+        std::string_view name;
+
+        constexpr Record( int v, std::string_view n ) noexcept
+        : value{ v }
+        , name{ n }
+        {}
+    };
 
     ~Script() noexcept;
     Script() noexcept;
 
     void doFile( const std::filesystem::path& );
 
-    void bindTable( const char* a_name, const std::vector<Record>& a_records );
+    void bindTable( std::string_view name, const Record* begin, const Record* end );
     std::vector<Pair> getTable( const char* a_name );
 
     Function operator [] ( std::string_view );

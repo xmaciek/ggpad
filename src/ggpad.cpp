@@ -19,32 +19,13 @@
 #include <filesystem>
 #include <thread>
 
+#include "actuator.hpp"
 #include "ggpad.hpp"
 #include "gamepad.hpp"
 #include "log.hpp"
 
-static const std::vector<Script::Record> GAMEPAD_TABLE {
-    { "unknown", 0 }
-#define MAKE_ENUM( NAME ) , { #NAME , Gamepad::NAME }
-#include "button_enum.def"
-#undef MAKE_ENUM
-};
+#include "table.hpp"
 
-static const std::vector<Script::Record> KEYBOARD_TABLE {
-    { "unknown", 0 }
-#define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, KEY_ ## VALUE }
-#include "key_enum.def"
-#undef MAKE_ENUM
-};
-
-static const std::vector<Script::Record> MOUSE_TABLE {
-    { "unknown", 0 }
-#define MAKE_ENUM( NAME, VALUE ) ,{ #NAME, BTN_ ## VALUE }
-#define MAKE_ENUM2( NAME, VALUE ) ,{ #NAME, REL_ ## VALUE }
-#include "mouse_enum.def"
-#undef MAKE_ENUM2
-#undef MAKE_ENUM
-};
 
 GGPAD* GGPAD::s_instance = nullptr;
 
@@ -92,9 +73,9 @@ static void setScriptForGamepad( Binding* binding, const std::filesystem::path& 
 
     LOG( LOG_DEBUG, "Opening file \"%s\"", a_scriptFile.c_str() );
     Script* script = new Script();
-    script->bindTable( "Gamepad", GAMEPAD_TABLE );
-    script->bindTable( "Keyboard", KEYBOARD_TABLE );
-    script->bindTable( "Mouse", MOUSE_TABLE );
+    script->bindTable( "Gamepad"sv, std::begin( g_tableGamepad ), std::end( g_tableGamepad ) );
+    script->bindTable( "Keyboard"sv, std::begin( g_tableKeyboard ), std::end( g_tableKeyboard ) );
+    script->bindTable( "Mouse"sv, std::begin( g_tableMouse ), std::end( g_tableMouse ) );
 
     script->registerFunction( "GGPAD_keyboardSet", &Script::facade<decltype(&GGPAD::setKeyboard), &GGPAD::setKeyboard, int, bool> );
     script->registerFunction( "GGPAD_mouseMove",   &Script::facade<decltype(&GGPAD::mouseMove), &GGPAD::mouseMove, int, int> );

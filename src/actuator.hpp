@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,25 +15,29 @@
 
 #pragma once
 
-#include "macros.hpp"
-
 #include <cstdint>
 
-class SystemEventLinux {
-    DISABLE_COPY( SystemEventLinux )
-
-private:
-    int32_t m_uinput = 0;
-
-    bool isValid() const;
-    void sendEvent( uint32_t a_type, uint32_t a_code, int32_t a_value );
-
-public:
-    SystemEventLinux();
-    ~SystemEventLinux();
-
-    void keyboard( uint32_t a_key, bool a_state );
-    void mouseMove( int32_t a_deltaX, int32_t a_deltaY );
-    void mouseSet( int32_t x, int32_t y );
-
+enum class Actuator : uint16_t {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    X,
+    Y,
+    A,
+    B,
+    L1,
+    L2,
+    L3,
+    LX,
+    LY,
+    R1,
+    R2,
+    R3,
+    RX,
+    RY,
+    START,
+    SELECT,
+    GUIDE,
+    count,
 };
