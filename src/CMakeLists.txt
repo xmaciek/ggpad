@@ -50,9 +50,35 @@ set( sources
     sdl_gamepad.cpp
 )
 
+set( headers
+    allocator.hpp
+    binding.hpp
+    bottleneck.hpp
+    comm.hpp
+    gamepad.hpp
+    gui_controller_model.hpp
+    gui_syntax_highlight.hpp
+    gui.hpp
+    idcounter.hpp
+    log.hpp
+    logview.hpp
+    lua_function.hpp
+    lua_script.hpp
+    macros.hpp
+    queue.hpp
+    script.hpp
+    sdl_gamepad.hpp
+    sdlapp.hpp
+    settings.hpp
+    systemevent.hpp
+)
+
 if ( GGPAD_LINUX )
     list( APPEND sources
         systemevent_linux.cpp
+    )
+    list( APPEND headers
+        systemevent_linux.hpp
     )
     list( APPEND link_libraries
         "stdc++fs"
@@ -70,5 +96,5 @@ qt5_wrap_cpp( mocables ${qheaders} )
 
 
 set( CMAKE_CXX_STANDARD 17 )
-add_executable( ${binname} ${sources} ${mocables} )
+add_executable( ${binname} ${sources} ${headers} ${mocables} )
 target_link_libraries( ${binname} ${link_libraries} )
