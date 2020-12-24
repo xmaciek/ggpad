@@ -66,9 +66,7 @@ void Binding::eventLoop()
             const Gamepad::Event& it = *ev;
             {
                 LockGuard lg( m_mutexScript );
-                if ( m_nativeEventFunc ) {
-                    m_script->setErrorCode( m_nativeEventFunc( it._type, it._code, it._value ) );
-                } else if ( m_eventFunc ) {
+                if ( m_script && m_eventFunc ) {
                     m_script->setErrorCode( m_eventFunc( (int)it.button, it.value ) );
                 }
             }

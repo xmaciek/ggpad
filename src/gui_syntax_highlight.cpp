@@ -47,7 +47,6 @@ constexpr static const char* LUA_KEYWORDS[] = {
 
 constexpr static const char* GGPAD_KEYWORDS[] = {
     "GGPAD_event"
-    , "GGPAD_nativeEvent"
     , "GGPAD_update"
     , "GGPAD_keyboardSet"
     , "GGPAD_mouseMove"
@@ -67,6 +66,7 @@ constexpr static const char* GGPAD_KEYWORDS[] = {
 
 constexpr static const char* OBSOLETE_KEWORDS[] = {
     "WOLOLO"
+    , "GGPAD_nativeEvent"
 };
 
 SyntaxHighlight::SyntaxHighlight( QTextDocument* parent )

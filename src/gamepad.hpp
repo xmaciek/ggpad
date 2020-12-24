@@ -26,7 +26,7 @@ class Gamepad {
     DISABLE_COPY( Gamepad )
 
 public:
-    typedef int16_t value_type;
+    using value_type = int16_t;
     enum Button : int16_t {
         unknown
 #define MAKE_ENUM( E ) , E
@@ -44,15 +44,9 @@ public:
         }
     };
 
-    struct [[gnu::packed]] Event {
+    struct Event {
         Button button{};
         value_type value{};
-        constexpr static value_type min() { return std::numeric_limits<value_type>::min() + 1; }
-        constexpr static value_type max() { return std::numeric_limits<value_type>::max(); }
-        // native representation
-        int16_t _type{};
-        int16_t _code{};
-        int32_t _value{};
 
         Event() noexcept = default;
         inline Event( Button b, value_type v ) noexcept
