@@ -30,7 +30,6 @@
 
 #include "comm.hpp"
 #include "gui_controller_model.hpp"
-#include "binding.hpp"
 
 class Gui : public QMainWindow {
     Q_OBJECT
@@ -38,7 +37,6 @@ class Gui : public QMainWindow {
 private:
     GuiControllerModel m_model{};
     GuiControllerModel::GamepadInfo* m_currentInfo = nullptr;
-    Binding* m_currentBinding = nullptr;
     QListView m_list{ this };
     QStackedWidget m_editorStack{ this };
 
