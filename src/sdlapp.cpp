@@ -55,6 +55,7 @@ static Actuator remapButton( uint8_t button )
     case SDL_CONTROLLER_BUTTON_LEFTSTICK: return Actuator::L3;
     case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return Actuator::R1;
     case SDL_CONTROLLER_BUTTON_RIGHTSTICK: return Actuator::R3;
+    case SDL_CONTROLLER_BUTTON_GUIDE: return Actuator::GUIDE;
     default:
         assert( !"unhandled enum" );
         return {};
