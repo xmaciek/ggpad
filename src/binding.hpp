@@ -17,7 +17,7 @@
 
 #include "bottleneck.hpp"
 #include "gamepad.hpp"
-#include "macros.hpp"
+#include "nocopy.hpp"
 #include "queue.hpp"
 #include "script.hpp"
 
@@ -28,8 +28,7 @@
 #include <mutex>
 #include <thread>
 
-class Binding {
-    DISABLE_COPY( Binding );
+class Binding : nocopy {
     void* m_editor = nullptr;
 
     Queue<Gamepad::Event> m_queue;

@@ -20,12 +20,10 @@
 #include <mutex>
 
 #include "idcounter.hpp"
-#include "macros.hpp"
 
 #include <SDL2/SDL.h>
 
 class SDLGamepad : public Gamepad {
-    DISABLE_COPY( SDLGamepad );
 
     std::mutex m_bottleneck{};
     std::list<Event> m_list{};

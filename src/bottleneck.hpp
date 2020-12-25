@@ -19,10 +19,9 @@
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
-#include "macros.hpp"
+#include "nocopy.hpp"
 
-class Bottleneck {
-    DISABLE_COPY( Bottleneck );
+class Bottleneck : nocopy {
     std::condition_variable m_cv;
     std::mutex m_mutex;
     std::unique_lock<std::mutex> m_ul;

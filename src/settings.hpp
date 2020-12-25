@@ -14,15 +14,13 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "macros.hpp"
+#include "nocopy.hpp"
 
 #include <cstdint>
 #include <map>
 #include <filesystem>
 
-class Settings {
-    DISABLE_COPY( Settings )
-
+class Settings : nocopy {
     std::map<uint64_t, std::filesystem::path> m_gamepadsScriptFile;
 
 public:

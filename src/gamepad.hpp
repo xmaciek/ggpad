@@ -21,11 +21,9 @@
 #include <string>
 
 #include "actuator.hpp"
-#include "macros.hpp"
+#include "nocopy.hpp"
 
-class Gamepad {
-    DISABLE_COPY( Gamepad )
-
+class Gamepad : nocopy {
 public:
     using value_type = int16_t;
 

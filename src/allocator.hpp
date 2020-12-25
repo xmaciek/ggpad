@@ -15,15 +15,14 @@
 
 #pragma once
 
-#include "macros.hpp"
+#include "nocopy.hpp"
 
 #include <cstdint>
 #include <map>
 #include <type_traits>
 #include <vector>
 
-class Allocator {
-    DISABLE_COPY( Allocator );
+class Allocator : nocopy {
 public:
     using value_type = uint8_t;
     using size_type = std::size_t;

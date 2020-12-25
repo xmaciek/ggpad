@@ -17,6 +17,7 @@
 
 #include "bottleneck.hpp"
 #include "queue.hpp"
+#include "nocopy.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -47,7 +48,7 @@ struct Message {
     const std::filesystem::path& toPath() const;
 };
 
-class Comm {
+class Comm : nocopy {
     Queue<Message> m_queueA{};
     Queue<Message> m_queueB{};
     Bottleneck m_bottleneckA{};

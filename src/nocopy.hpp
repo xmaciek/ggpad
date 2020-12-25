@@ -1,4 +1,4 @@
-// GGPAD Copyright 2018 Maciej Latocha
+// GGPAD Copyright 2020 Maciej Latocha ( latocha.maciek@gmail.com )
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#define DISABLE_COPY( CLASS_NAME ) \
-    CLASS_NAME( const CLASS_NAME& ) = delete; \
-    CLASS_NAME& operator = ( const CLASS_NAME& ) = delete;
+#pragma once
+
+struct nocopy {
+    ~nocopy() noexcept = default;
+    constexpr nocopy() noexcept = default;
+
+    nocopy( const nocopy& ) = delete;
+    nocopy& operator = ( const nocopy& ) = delete;
+};

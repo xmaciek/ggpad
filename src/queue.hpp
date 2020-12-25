@@ -15,15 +15,14 @@
 
 #pragma once
 
-#include "macros.hpp"
+#include "nocopy.hpp"
 
 #include <list>
 #include <mutex>
 #include <optional>
 
 template <typename T>
-class Queue {
-    DISABLE_COPY( Queue );
+class Queue : nocopy {
 
     std::mutex m_mutex;
     std::list<T> m_list;

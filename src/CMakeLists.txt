@@ -66,7 +66,7 @@ set( headers
     logview.hpp
     lua_function.hpp
     lua_script.hpp
-    macros.hpp
+    nocopy.hpp
     queue.hpp
     script.hpp
     sdl_gamepad.hpp

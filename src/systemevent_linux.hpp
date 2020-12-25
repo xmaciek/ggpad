@@ -15,14 +15,11 @@
 
 #pragma once
 
-#include "macros.hpp"
+#include "nocopy.hpp"
 
 #include <cstdint>
 
-class SystemEventLinux {
-    DISABLE_COPY( SystemEventLinux )
-
-private:
+class SystemEventLinux : nocopy {
     int32_t m_uinput = 0;
 
     bool isValid() const;

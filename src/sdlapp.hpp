@@ -16,12 +16,11 @@
 #include <chrono>
 #include <variant>
 
-#include "macros.hpp"
+#include "nocopy.hpp"
 #include "gamepad.hpp"
 #include "sdl_gamepad.hpp"
 
-class SDLApp {
-    DISABLE_COPY( SDLApp );
+class SDLApp : nocopy {
 
 public:
     struct SleepFor {

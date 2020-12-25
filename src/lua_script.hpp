@@ -16,7 +16,7 @@
 #pragma once
 
 #include "allocator.hpp"
-#include "macros.hpp"
+#include "nocopy.hpp"
 #include "lua_function.hpp"
 
 #include <filesystem>
@@ -29,8 +29,7 @@ struct lua_State;
 
 namespace lua {
 
-class Script {
-    DISABLE_COPY( Script )
+class Script : nocopy {
 
 public:
     using vm_type = struct lua_State;

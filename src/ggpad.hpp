@@ -22,13 +22,12 @@
 
 #include "binding.hpp"
 #include "comm.hpp"
-#include "macros.hpp"
+#include "nocopy.hpp"
 #include "sdlapp.hpp"
 #include "settings.hpp"
 #include "systemevent.hpp"
 
-class GGPAD {
-    DISABLE_COPY( GGPAD );
+class GGPAD : nocopy {
 
 private:
     static GGPAD* s_instance;
