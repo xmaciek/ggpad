@@ -15,6 +15,10 @@
 
 #include "gui_syntax_highlight.hpp"
 
+#include <QString>
+
+#include "table.hpp"
+
 #define PRE_NUM_TOKENS "[ \\t\\+\\-\\*\\/\\%\\(\\)]"
 
 #define WHOLE( X ) "\\b" X "\\b"
@@ -51,7 +55,6 @@ constexpr static const char* GGPAD_KEYWORDS[] = {
     , "GGPAD_keyboardSet"
     , "GGPAD_mouseMove"
     , "GGPAD_mouseSet"
-// TODO: restore buttons highlight
 };
 
 constexpr static const char* OBSOLETE_KEWORDS[] = {
@@ -67,6 +70,16 @@ SyntaxHighlight::SyntaxHighlight( QTextDocument* parent )
     formatGGPAD.setFontWeight( QFont::Bold );
     for ( const char* it : GGPAD_KEYWORDS ) {
         m_matchPairs.push_back( { QRegularExpression( it ), formatGGPAD, 0 } );
+    }
+
+    for ( auto&& it : g_tableGamepad ) {
+        m_matchPairs.push_back( { QRegularExpression( QString( "Gamepad." ) + it.name.data() ), formatGGPAD, 0 } );
+    }
+    for ( auto&& it : g_tableKeyboard ) {
+        m_matchPairs.push_back( { QRegularExpression( QString( "Keyboard." ) + it.name.data() ), formatGGPAD, 0 } );
+    }
+    for ( auto&& it : g_tableMouse ) {
+        m_matchPairs.push_back( { QRegularExpression( QString( "Mouse." ) + it.name.data() ), formatGGPAD, 0 } );
     }
 
     QTextCharFormat formatLuaKeyword;
