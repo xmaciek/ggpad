@@ -23,7 +23,7 @@
 #include "ggpad.hpp"
 #include "gamepad.hpp"
 #include "log.hpp"
-
+#include "variant_index.hpp"
 #include "table.hpp"
 
 
@@ -119,29 +119,40 @@ int GGPAD::exec()
     m_threadClientMessages = std::thread( &GGPAD::processClientMessages, this );
 
     while ( m_isRunning ) {
-        Gamepad* connectedGamepad = nullptr;
-        Gamepad::RuntimeId toDisconnect{};
+        std::optional<Gamepad::RuntimeId> toDisconnect{};
         SDLApp::Event event = m_sdlApp.next();
 
         switch ( event.index() ) {
-        case 0: break; // monostate
-        case 1:
+        case indexOf<SDLApp::Event, std::monostate>():
+            break;
+
+        case indexOf<SDLApp::Event, SDLApp::SleepFor>():
             std::this_thread::sleep_for( std::get<SDLApp::SleepFor>( event ).value );
             m_sdlApp.update();
             break;
 
-        case 2: { // connect
+        case indexOf<SDLApp::Event, SDLApp::Connected>(): {
             SDLApp::Connected& connected = std::get<SDLApp::Connected>( event );
-            connectedGamepad = connected.gamepad;
             LOG( LOG_DEBUG, "Connecting %08lX", connected.gamepad->uid() );
+            pushNewBinding( connected.gamepad, &m_list, m_settings[ connected.gamepad->uid() ] );
+            m_clientComm->pushToClient( Message{
+                Message::Type::eGamepadConnected,
+                connected.gamepad->uid(),
+                connected.gamepad->displayName()
+            } );
+            m_clientComm->pushToClient( Message{
+                Message::Type::eUpdateScriptPath,
+                connected.gamepad->uid(),
+                m_settings[ connected.gamepad->uid() ]
+            } );
         } break;
 
-        case 3: // disconnect
+        case indexOf<SDLApp::Event, SDLApp::Disconnected>():
             toDisconnect = std::get<SDLApp::Disconnected>( event ).id;
-            LOG( LOG_DEBUG, "Disconnecting %u", toDisconnect.value );
+            LOG( LOG_DEBUG, "Disconnecting %u", toDisconnect->value );
             break;
 
-        case 4: {
+        case indexOf<SDLApp::Event, SDLApp::Input>(): {
             const SDLApp::Input& input = std::get<SDLApp::Input>( event );
             Binding* binding = findByRuntimeId( input.id );
             if ( binding ) {
@@ -150,25 +161,9 @@ int GGPAD::exec()
         } break;
         }
 
-        if ( connectedGamepad ) {
-            pushNewBinding( connectedGamepad, &m_list, m_settings[ connectedGamepad->uid() ] );
-            m_clientComm->pushToClient( Message{
-                Message::Type::eGamepadConnected,
-                connectedGamepad->uid(),
-                connectedGamepad->displayName()
-            } );
-            m_clientComm->pushToClient( Message{
-                Message::Type::eUpdateScriptPath,
-                connectedGamepad->uid(),
-                m_settings[ connectedGamepad->uid() ]
-            } );
-        }
-
-        bool didDisconnect = false;
         for ( Binding& it : m_list ) {
-            if ( toDisconnect == it.gamepadRuntimeId() ) {
+            if ( toDisconnect && *toDisconnect == it.gamepadRuntimeId() ) {
                 it.disconnect();
-                didDisconnect = true;
             }
             const bool stateChanged = it.connectionStateChanged();
             it.scriptStateChanged();
