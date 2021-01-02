@@ -31,9 +31,9 @@ QVariant GuiControllerModel::data( const QModelIndex& index, int role ) const
         assert( index.row() < m_gamepadInfoList.size() );
         std::list<GamepadInfo>::const_iterator it = m_gamepadInfoList.begin();
         std::advance( it, index.row() );
-        return QString( "%1\n%2" )
+        return QString( "%1%2" )
             .arg( it->m_name.c_str() )
-            .arg( it->m_isConnected ? "" : "(disconnected)" )
+            .arg( it->m_isConnected ? "" : "\n(disconnected)" )
         ;
     }
     case Qt::DecorationRole:
