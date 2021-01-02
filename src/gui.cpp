@@ -248,13 +248,19 @@ void Gui::processServerMessages()
             m_model[ msg->m_id ] = GuiControllerModel::GamepadInfo{ msg->m_id, msg->toString(), {}, true };
             m_model.refresh();
             break;
+
         case Message::Type::eUpdateScriptPath:
             m_model[ msg->m_id ].m_scriptPath = msg->toPath();
             m_model.refresh();
             break;
+
         case Message::Type::eGamepadDisconnected:
             m_model[ msg->m_id ].m_isConnected = false;
             m_model.refresh();
+            break;
+
+        default:
+            assert( !"unhandled enum" );
             break;
         }
     }
