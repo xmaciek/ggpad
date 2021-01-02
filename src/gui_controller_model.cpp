@@ -15,8 +15,6 @@
 
 #include "gui_controller_model.hpp"
 
-#include "binding.hpp"
-
 #include <QIcon>
 
 int GuiControllerModel::rowCount( const QModelIndex& parent ) const
