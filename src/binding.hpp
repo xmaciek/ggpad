@@ -53,9 +53,6 @@ public:
     using LockGuard = std::lock_guard<std::mutex>;
 
     void setScript( Script* );
-    Script::Function m_updateFunc;
-    Script::Function m_eventFunc;
-    Script::Function m_nativeEventFunc;
     std::atomic_bool m_isRunning = false;
     std::atomic_bool m_isRunningScript = false;
 

@@ -35,15 +35,12 @@ void Binding::run()
 
 void Binding::updateLoop()
 {
-    if ( !m_updateFunc ) {
-        return;
-    }
     assert( m_script );
     const double deltaTime = 5.0 / 1000;
     while ( m_isRunningScript.load() ) {
         std::this_thread::sleep_for( 5ms );
         LockGuard lockGuard( m_mutexScript );
-        m_updateFunc( deltaTime );
+        m_script->call( "GGPAD_update", deltaTime );
     }
 }
 
@@ -66,12 +63,7 @@ void Binding::eventLoop()
             const Gamepad::Event& it = *ev;
             {
                 LockGuard lg( m_mutexScript );
-                if ( m_script && m_eventFunc ) {
-                    m_script->setErrorCode( m_eventFunc( (int)it.button, it.value ) );
-                }
-            }
-            if ( m_script && m_script->hasError() ) {
-                stopScript();
+                m_script && m_script->call( "GGPAD_event", (int)it.button, it.value );
             }
         }
     }
@@ -175,9 +167,6 @@ void Binding::setScript( Script* sc )
     assert( !m_isRunningScript.load() );
     delete m_script;
     m_script = sc;
-    m_updateFunc = (*sc)[ "GGPAD_update" ];
-    m_eventFunc = (*sc)[ "GGPAD_event" ];
-    m_nativeEventFunc = (*sc)[ "GGPAD_nativeEvent" ];
 }
 
 void* Binding::editor() const

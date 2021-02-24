@@ -17,7 +17,6 @@
 
 #include "allocator.hpp"
 #include "nocopy.hpp"
-#include "lua_function.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -32,8 +31,8 @@ namespace lua {
 class Script : nocopy {
 
 public:
-    using vm_type = struct lua_State;
-    using callback_type = int(*)(vm_type*);
+    using vm_type = lua_State;
+    using callback_type = int(*)( vm_type* );
 
 private:
     Allocator m_allocator;
@@ -48,10 +47,40 @@ private:
     void pop();
 
     int errorCode() const;
+    bool getFunc( std::string_view );
+
+    template <typename T>
+    void push_arg( T );
+
+    void push_arg( short );
+    void push_arg( int );
+    void push_arg( double );
+
+    template <typename T1>
+    int push( T1&& t1 )
+    {
+        push_arg( t1 );
+        return 1;
+    }
+    template <typename T1, typename T2>
+    int push( T1&& t1, T2&& t2 )
+    {
+        push_arg( t1 );
+        push_arg( t2 );
+        return 2;
+    }
+    template <typename T1, typename T2, typename T3>
+    int push( T1&& t1, T2&& t2, T3&& t3 )
+    {
+        push_arg( t1 );
+        push_arg( t2 );
+        push_arg( t3 );
+        return 3;
+    }
+
+    int call( int );
 
 public:
-    using Function = lua::Function;
-
     using Variant = std::variant<std::string,int64_t>;
     using Pair = std::pair<Variant,Variant>;
 
@@ -73,11 +102,16 @@ public:
     void bindTable( std::string_view name, const Record* begin, const Record* end );
     std::vector<Pair> getTable( const char* a_name );
 
-    Function operator [] ( std::string_view );
+    // TODO: this should return std::error_code
+    template <class... ARGS>
+    int call( std::string_view funcName, ARGS&&... args )
+    {
+        return getFunc( funcName )
+            ? call( push( std::forward<ARGS>( args )... ) )
+            : -1;
+    }
 
     void registerFunction( const char*, callback_type );
-
-    size_t memoryUsage() const;
 
     template <typename FUNC_TYPE, FUNC_TYPE FUNC, typename ARG0, typename ARG1>
     static int facade( vm_type* vm )
@@ -92,7 +126,6 @@ public:
         return 1;
     }
 
-    void setErrorCode( int );
     bool hasError() const;
 };
 

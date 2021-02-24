@@ -41,7 +41,6 @@ set( sources
     gui_syntax_highlight.cpp
     idcounter.cpp
     lua_script.cpp
-    lua_function.cpp
     log.cpp
     logview.cpp
     main.cpp
@@ -64,7 +63,6 @@ set( headers
     keyboard.hpp
     log.hpp
     logview.hpp
-    lua_function.hpp
     lua_script.hpp
     nocopy.hpp
     queue.hpp

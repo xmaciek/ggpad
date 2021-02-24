@@ -65,15 +65,10 @@ void Script::doFile( const std::filesystem::path& a_fileName )
     ifs.read( text.data(), text.size() );
     ifs.close();
     text.back() = 0;
-    setErrorCode( luaL_dostring( m_vm, text.c_str() ) );
-    if ( errorCode() != LUA_OK ) {
+    const int ec = luaL_dostring( m_vm, text.c_str() );
+    if ( ec != LUA_OK ) {
         LOG( LOG_ERROR, "%s", lua_tostring( m_vm, Address::eValue ) );
     }
-}
-
-Script::Function Script::operator [] ( std::string_view name )
-{
-    return Script::Function( reinterpret_cast<lua::vm_type*>( m_vm ), name.data() );
 }
 
 static Script::Variant getFromStack( Script::vm_type* vm, int idx )
@@ -134,24 +129,44 @@ void Script::pop()
     lua_pop( m_vm, 1 );
 }
 
-std::size_t Script::memoryUsage() const
-{
-    return m_allocator.totalUsage();
-}
-
-void Script::setErrorCode( int ec )
-{
-    m_lastErrorCode = ec;
-}
-
-int Script::errorCode() const
-{
-    return m_lastErrorCode;
-}
-
 bool Script::hasError() const
 {
     return m_lastErrorCode != LUA_OK;
+}
+
+bool Script::getFunc( std::string_view funcName )
+{
+    assert( m_vm );
+    assert( funcName.data() );
+    lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
+    const int ret = lua_getglobal( vm, funcName.data() );
+    return ret == LUA_TFUNCTION;
+}
+
+int Script::call( int num )
+{
+    lua_State* vm = reinterpret_cast<lua_State*>( m_vm );
+    const int ret = lua_pcall( vm, num, 0, 0 );
+    if ( ret != LUA_OK ) {
+        LOG( LOG_ERROR, "%s\n", lua_tostring( vm, -1 ) );
+    }
+    assert( stackCount( m_vm )  == 0 );
+    return ret;
+}
+
+void Script::push_arg( short v )
+{
+    lua_pushinteger( reinterpret_cast<lua_State*>( m_vm ), v );
+}
+
+void Script::push_arg( int v )
+{
+    lua_pushinteger( reinterpret_cast<lua_State*>( m_vm ), v );
+}
+
+void Script::push_arg( double v )
+{
+    lua_pushnumber( reinterpret_cast<lua_State*>( m_vm ), v );
 }
 
 } // namespace lua
